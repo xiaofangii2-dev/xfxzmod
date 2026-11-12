@@ -1,0 +1,23 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+version = '1.0.0'
+group = 'org.xiaofang_dev'
+
+base {
+    archivesName = 'xfxzlib'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}

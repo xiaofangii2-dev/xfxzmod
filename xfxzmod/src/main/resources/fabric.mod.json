@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "icon": "icon.png",
+  "id": "xfxzmod",
+  "version": "1.0.0",
+  "name": "XFXZ Mod",
+  "description": "一个空架构模组",
+  "authors": ["xiaofangii2"],
+  "license": "CC-BY-NC-SA-4.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.xiaofang_dev.xfxzmod.XfxzMod"
+    ]
+  },
+  "mixins": [
+    "xfxzmod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "xfxzlib": "1.0.0",
+    "xfxzpluginloader": "1.0.0"
+  },
+  "breaks": {
+    "xfxzlib": "!1.0.0",
+    "xfxzpluginloader": "!1.0.0"
+  }
+}

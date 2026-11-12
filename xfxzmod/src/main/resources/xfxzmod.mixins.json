@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "org.xiaofang_dev.xfxzmod.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "server": [
+    "DedicatedServerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

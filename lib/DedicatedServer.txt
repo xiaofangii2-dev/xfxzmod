@@ -1,0 +1,2093 @@
+Compiled from "DedicatedServer.java"
+public class net.minecraft.server.dedicated.DedicatedServer extends net.minecraft.server.MinecraftServer implements net.minecraft.server.ServerInterface {
+  private static final org.slf4j.Logger LOGGER;
+
+  private static final int CONVERSION_RETRY_DELAY_MS;
+
+  private static final int CONVERSION_RETRIES;
+
+  private final java.util.List<net.minecraft.server.ConsoleInput> consoleInput;
+
+  private net.minecraft.server.rcon.thread.QueryThreadGs4 queryThreadGs4;
+
+  private final net.minecraft.server.rcon.RconConsoleSource rconConsoleSource;
+
+  private net.minecraft.server.rcon.thread.RconThread rconThread;
+
+  private final net.minecraft.server.dedicated.DedicatedServerSettings settings;
+
+  private net.minecraft.server.gui.MinecraftServerGui gui;
+
+  private final net.minecraft.server.network.ServerTextFilter serverTextFilter;
+
+  private net.minecraft.util.debugchart.RemoteSampleLogger tickTimeLogger;
+
+  private boolean isTickTimeLoggingEnabled;
+
+  private final net.minecraft.server.ServerLinks serverLinks;
+
+  private final java.util.Map<java.lang.String, java.lang.String> codeOfConductTexts;
+
+  private final net.minecraft.server.jsonrpc.ManagementServer jsonRpcServer;
+
+  public net.minecraft.server.dedicated.DedicatedServer(java.lang.Thread, net.minecraft.world.level.storage.LevelStorageSource$LevelStorageAccess, net.minecraft.server.packs.repository.PackRepository, net.minecraft.server.WorldStem, java.util.Optional<net.minecraft.world.level.gamerules.GameRules>, net.minecraft.server.dedicated.DedicatedServerSettings, com.mojang.datafixers.DataFixer, net.minecraft.server.Services, net.minecraft.server.jsonrpc.ManagementServer, net.minecraft.server.notifications.NotificationManager);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: aload_2
+         3: aload_3
+         4: aload         4
+         6: aload         5
+         8: getstatic     #1                  // Field java/net/Proxy.NO_PROXY:Ljava/net/Proxy;
+        11: aload         7
+        13: aload         8
+        15: invokestatic  #7                  // Method net/minecraft/server/level/progress/LoggingLevelLoadListener.forDedicatedServer:()Lnet/minecraft/server/level/progress/LoggingLevelLoadListener;
+        18: iconst_1
+        19: aload         10
+        21: invokespecial #13                 // Method net/minecraft/server/MinecraftServer."<init>":(Ljava/lang/Thread;Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/packs/repository/PackRepository;Lnet/minecraft/server/WorldStem;Ljava/util/Optional;Ljava/net/Proxy;Lcom/mojang/datafixers/DataFixer;Lnet/minecraft/server/Services;Lnet/minecraft/server/level/progress/LevelLoadListener;ZLnet/minecraft/server/notifications/NotificationManager;)V
+        24: aload_0
+        25: invokestatic  #19                 // Method com/google/common/collect/Lists.newArrayList:()Ljava/util/ArrayList;
+        28: invokestatic  #25                 // Method java/util/Collections.synchronizedList:(Ljava/util/List;)Ljava/util/List;
+        31: putfield      #31                 // Field consoleInput:Ljava/util/List;
+        34: aload_0
+        35: aload         6
+        37: putfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        40: aload_0
+        41: new           #41                 // class net/minecraft/server/rcon/RconConsoleSource
+        44: dup
+        45: aload_0
+        46: invokespecial #43                 // Method net/minecraft/server/rcon/RconConsoleSource."<init>":(Lnet/minecraft/server/MinecraftServer;)V
+        49: putfield      #46                 // Field rconConsoleSource:Lnet/minecraft/server/rcon/RconConsoleSource;
+        52: aload_0
+        53: aload         6
+        55: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+        58: invokestatic  #56                 // Method net/minecraft/server/network/ServerTextFilter.createFromConfig:(Lnet/minecraft/server/dedicated/DedicatedServerProperties;)Lnet/minecraft/server/network/ServerTextFilter;
+        61: putfield      #62                 // Field serverTextFilter:Lnet/minecraft/server/network/ServerTextFilter;
+        64: aload_0
+        65: aload         9
+        67: putfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+        70: aload_0
+        71: aload         6
+        73: invokestatic  #70                 // Method createServerLinks:(Lnet/minecraft/server/dedicated/DedicatedServerSettings;)Lnet/minecraft/server/ServerLinks;
+        76: putfield      #74                 // Field serverLinks:Lnet/minecraft/server/ServerLinks;
+        79: aload         6
+        81: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+        84: getfield      #78                 // Field net/minecraft/server/dedicated/DedicatedServerProperties.codeOfConduct:Z
+        87: ifeq          100
+        90: aload_0
+        91: invokestatic  #84                 // Method readCodeOfConducts:()Ljava/util/Map;
+        94: putfield      #88                 // Field codeOfConductTexts:Ljava/util/Map;
+        97: goto          107
+       100: aload_0
+       101: invokestatic  #92                 // InterfaceMethod java/util/Map.of:()Ljava/util/Map;
+       104: putfield      #88                 // Field codeOfConductTexts:Ljava/util/Map;
+       107: return
+
+  private static java.util.Map<java.lang.String, java.lang.String> readCodeOfConducts();
+    Code:
+         0: ldc           #97                 // String codeofconduct
+         2: iconst_0
+         3: anewarray     #99                 // class java/lang/String
+         6: invokestatic  #101                // InterfaceMethod java/nio/file/Path.of:(Ljava/lang/String;[Ljava/lang/String;)Ljava/nio/file/Path;
+         9: astore_0
+        10: aload_0
+        11: iconst_1
+        12: anewarray     #106                // class java/nio/file/LinkOption
+        15: dup
+        16: iconst_0
+        17: getstatic     #108                // Field java/nio/file/LinkOption.NOFOLLOW_LINKS:Ljava/nio/file/LinkOption;
+        20: aastore
+        21: invokestatic  #112                // Method java/nio/file/Files.isDirectory:(Ljava/nio/file/Path;[Ljava/nio/file/LinkOption;)Z
+        24: ifne          44
+        27: new           #118                // class java/lang/IllegalArgumentException
+        30: dup
+        31: aload_0
+        32: invokestatic  #120                // Method java/lang/String.valueOf:(Ljava/lang/Object;)Ljava/lang/String;
+        35: invokedynamic #124,  0            // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+        40: invokespecial #128                // Method java/lang/IllegalArgumentException."<init>":(Ljava/lang/String;)V
+        43: athrow
+        44: invokestatic  #131                // Method com/google/common/collect/ImmutableMap.builder:()Lcom/google/common/collect/ImmutableMap$Builder;
+        47: astore_1
+        48: aload_0
+        49: invokestatic  #137                // Method java/nio/file/Files.list:(Ljava/nio/file/Path;)Ljava/util/stream/Stream;
+        52: astore_2
+        53: aload_2
+        54: invokeinterface #141,  1          // InterfaceMethod java/util/stream/Stream.toList:()Ljava/util/List;
+        59: invokeinterface #147,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+        64: astore_3
+        65: aload_3
+        66: invokeinterface #153,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+        71: ifeq          227
+        74: aload_3
+        75: invokeinterface #159,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        80: checkcast     #102                // class java/nio/file/Path
+        83: astore        4
+        85: aload         4
+        87: invokeinterface #163,  1          // InterfaceMethod java/nio/file/Path.getFileName:()Ljava/nio/file/Path;
+        92: invokeinterface #167,  1          // InterfaceMethod java/nio/file/Path.toString:()Ljava/lang/String;
+        97: astore        5
+        99: aload         5
+       101: ldc           #171                // String .txt
+       103: invokevirtual #173                // Method java/lang/String.endsWith:(Ljava/lang/String;)Z
+       106: ifeq          224
+       109: aload         5
+       111: iconst_0
+       112: aload         5
+       114: invokevirtual #177                // Method java/lang/String.length:()I
+       117: iconst_4
+       118: isub
+       119: invokevirtual #181                // Method java/lang/String.substring:(II)Ljava/lang/String;
+       122: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       125: invokevirtual #191                // Method java/lang/String.toLowerCase:(Ljava/util/Locale;)Ljava/lang/String;
+       128: astore        6
+       130: aload         4
+       132: iconst_0
+       133: anewarray     #106                // class java/nio/file/LinkOption
+       136: invokeinterface #195,  2          // InterfaceMethod java/nio/file/Path.toRealPath:([Ljava/nio/file/LinkOption;)Ljava/nio/file/Path;
+       141: invokeinterface #199,  1          // InterfaceMethod java/nio/file/Path.getParent:()Ljava/nio/file/Path;
+       146: aload_0
+       147: invokeinterface #202,  1          // InterfaceMethod java/nio/file/Path.toAbsolutePath:()Ljava/nio/file/Path;
+       152: invokeinterface #205,  2          // InterfaceMethod java/nio/file/Path.equals:(Ljava/lang/Object;)Z
+       157: ifne          175
+       160: new           #118                // class java/lang/IllegalArgumentException
+       163: dup
+       164: aload         5
+       166: invokedynamic #209,  0            // InvokeDynamic #1:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       171: invokespecial #128                // Method java/lang/IllegalArgumentException."<init>":(Ljava/lang/String;)V
+       174: athrow
+       175: ldc           #210                // String \n
+       177: aload         4
+       179: getstatic     #212                // Field java/nio/charset/StandardCharsets.UTF_8:Ljava/nio/charset/Charset;
+       182: invokestatic  #218                // Method java/nio/file/Files.readAllLines:(Ljava/nio/file/Path;Ljava/nio/charset/Charset;)Ljava/util/List;
+       185: invokestatic  #222                // Method java/lang/String.join:(Ljava/lang/CharSequence;Ljava/lang/Iterable;)Ljava/lang/String;
+       188: astore        7
+       190: aload_1
+       191: aload         6
+       193: aload         7
+       195: invokestatic  #226                // Method net/minecraft/util/StringUtil.stripColor:(Ljava/lang/String;)Ljava/lang/String;
+       198: invokevirtual #231                // Method com/google/common/collect/ImmutableMap$Builder.put:(Ljava/lang/Object;Ljava/lang/Object;)Lcom/google/common/collect/ImmutableMap$Builder;
+       201: pop
+       202: goto          224
+       205: astore        7
+       207: new           #118                // class java/lang/IllegalArgumentException
+       210: dup
+       211: aload         5
+       213: invokedynamic #239,  0            // InvokeDynamic #2:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+       218: aload         7
+       220: invokespecial #240                // Method java/lang/IllegalArgumentException."<init>":(Ljava/lang/String;Ljava/lang/Throwable;)V
+       223: athrow
+       224: goto          65
+       227: aload_2
+       228: ifnull        264
+       231: aload_2
+       232: invokeinterface #243,  1          // InterfaceMethod java/util/stream/Stream.close:()V
+       237: goto          264
+       240: astore_3
+       241: aload_2
+       242: ifnull        262
+       245: aload_2
+       246: invokeinterface #243,  1          // InterfaceMethod java/util/stream/Stream.close:()V
+       251: goto          262
+       254: astore        4
+       256: aload_3
+       257: aload         4
+       259: invokevirtual #249                // Method java/lang/Throwable.addSuppressed:(Ljava/lang/Throwable;)V
+       262: aload_3
+       263: athrow
+       264: aload_1
+       265: invokevirtual #253                // Method com/google/common/collect/ImmutableMap$Builder.build:()Lcom/google/common/collect/ImmutableMap;
+       268: areturn
+       269: astore_1
+       270: new           #118                // class java/lang/IllegalArgumentException
+       273: dup
+       274: ldc_w         #257                // String Failed to read Code of Conduct folder
+       277: aload_1
+       278: invokespecial #240                // Method java/lang/IllegalArgumentException."<init>":(Ljava/lang/String;Ljava/lang/Throwable;)V
+       281: athrow
+      Exception table:
+         from    to  target type
+           175   202   205   Class java/io/IOException
+            53   227   240   Class java/lang/Throwable
+           245   251   254   Class java/lang/Throwable
+            44   268   269   Class java/io/IOException
+
+  protected boolean initServer() throws java.io.IOException;
+    Code:
+         0: new           #259                // class net/minecraft/server/dedicated/DedicatedServer$1
+         3: dup
+         4: aload_0
+         5: ldc_w         #261                // String Server console handler
+         8: invokespecial #263                // Method net/minecraft/server/dedicated/DedicatedServer$1."<init>":(Lnet/minecraft/server/dedicated/DedicatedServer;Ljava/lang/String;)V
+        11: astore_1
+        12: aload_1
+        13: iconst_1
+        14: invokevirtual #266                // Method java/lang/Thread.setDaemon:(Z)V
+        17: aload_1
+        18: new           #272                // class net/minecraft/DefaultUncaughtExceptionHandler
+        21: dup
+        22: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        25: invokespecial #278                // Method net/minecraft/DefaultUncaughtExceptionHandler."<init>":(Lorg/slf4j/Logger;)V
+        28: invokevirtual #281                // Method java/lang/Thread.setUncaughtExceptionHandler:(Ljava/lang/Thread$UncaughtExceptionHandler;)V
+        31: aload_1
+        32: invokevirtual #285                // Method java/lang/Thread.start:()V
+        35: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        38: ldc_w         #288                // String Starting minecraft server version {}
+        41: invokestatic  #290                // Method net/minecraft/SharedConstants.getCurrentVersion:()Lnet/minecraft/WorldVersion;
+        44: invokeinterface #296,  1          // InterfaceMethod net/minecraft/WorldVersion.name:()Ljava/lang/String;
+        49: invokeinterface #301,  3          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;Ljava/lang/Object;)V
+        54: invokestatic  #307                // Method java/lang/Runtime.getRuntime:()Ljava/lang/Runtime;
+        57: invokevirtual #313                // Method java/lang/Runtime.maxMemory:()J
+        60: ldc2_w        #317                // long 1024l
+        63: ldiv
+        64: ldc2_w        #317                // long 1024l
+        67: ldiv
+        68: ldc2_w        #319                // long 512l
+        71: lcmp
+        72: ifge          86
+        75: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        78: ldc_w         #321                // String To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"
+        81: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+        86: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        89: ldc_w         #326                // String Loading properties
+        92: invokeinterface #328,  2          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;)V
+        97: aload_0
+        98: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+       101: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+       104: astore_2
+       105: aload_0
+       106: invokevirtual #330                // Method isSingleplayer:()Z
+       109: ifeq          122
+       112: aload_0
+       113: ldc_w         #333                // String 127.0.0.1
+       116: invokevirtual #335                // Method setLocalIp:(Ljava/lang/String;)V
+       119: goto          146
+       122: aload_0
+       123: aload_2
+       124: getfield      #338                // Field net/minecraft/server/dedicated/DedicatedServerProperties.onlineMode:Z
+       127: invokevirtual #341                // Method setUsesAuthentication:(Z)V
+       130: aload_0
+       131: aload_2
+       132: getfield      #344                // Field net/minecraft/server/dedicated/DedicatedServerProperties.preventProxyConnections:Z
+       135: invokevirtual #347                // Method setPreventProxyConnections:(Z)V
+       138: aload_0
+       139: aload_2
+       140: getfield      #350                // Field net/minecraft/server/dedicated/DedicatedServerProperties.serverIp:Ljava/lang/String;
+       143: invokevirtual #335                // Method setLocalIp:(Ljava/lang/String;)V
+       146: aload_0
+       147: getfield      #354                // Field worldData:Lnet/minecraft/world/level/storage/WorldData;
+       150: aload_2
+       151: getfield      #358                // Field net/minecraft/server/dedicated/DedicatedServerProperties.gameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+       154: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+       157: checkcast     #367                // class net/minecraft/world/level/GameType
+       160: invokeinterface #369,  2          // InterfaceMethod net/minecraft/world/level/storage/WorldData.setGameType:(Lnet/minecraft/world/level/GameType;)V
+       165: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       168: ldc_w         #375                // String Default game type: {}
+       171: aload_2
+       172: getfield      #358                // Field net/minecraft/server/dedicated/DedicatedServerProperties.gameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+       175: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+       178: invokeinterface #301,  3          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;Ljava/lang/Object;)V
+       183: aconst_null
+       184: astore_3
+       185: aload_0
+       186: invokevirtual #377                // Method getLocalIp:()Ljava/lang/String;
+       189: invokevirtual #380                // Method java/lang/String.isEmpty:()Z
+       192: ifne          203
+       195: aload_0
+       196: invokevirtual #377                // Method getLocalIp:()Ljava/lang/String;
+       199: invokestatic  #383                // Method java/net/InetAddress.getByName:(Ljava/lang/String;)Ljava/net/InetAddress;
+       202: astore_3
+       203: aload_0
+       204: invokevirtual #389                // Method getPort:()I
+       207: ifge          218
+       210: aload_0
+       211: aload_2
+       212: getfield      #392                // Field net/minecraft/server/dedicated/DedicatedServerProperties.serverPort:I
+       215: invokevirtual #396                // Method setPort:(I)V
+       218: aload_0
+       219: invokevirtual #400                // Method initializeKeyPair:()V
+       222: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       225: ldc_w         #403                // String Starting Minecraft server on {}:{}
+       228: aload_0
+       229: invokevirtual #377                // Method getLocalIp:()Ljava/lang/String;
+       232: invokevirtual #380                // Method java/lang/String.isEmpty:()Z
+       235: ifeq          244
+       238: ldc_w         #405                // String *
+       241: goto          248
+       244: aload_0
+       245: invokevirtual #377                // Method getLocalIp:()Ljava/lang/String;
+       248: aload_0
+       249: invokevirtual #389                // Method getPort:()I
+       252: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       255: invokeinterface #412,  4          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V
+       260: aload_0
+       261: invokevirtual #415                // Method getConnection:()Lnet/minecraft/server/network/ServerConnectionListener;
+       264: aload_3
+       265: aload_0
+       266: invokevirtual #389                // Method getPort:()I
+       269: invokevirtual #419                // Method net/minecraft/server/network/ServerConnectionListener.startTcpServerListener:(Ljava/net/InetAddress;I)V
+       272: goto          317
+       275: astore        4
+       277: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       280: ldc_w         #425                // String **** FAILED TO BIND TO PORT!
+       283: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       288: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       291: ldc_w         #427                // String The exception was: {}
+       294: aload         4
+       296: invokevirtual #429                // Method java/io/IOException.toString:()Ljava/lang/String;
+       299: invokeinterface #430,  3          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;Ljava/lang/Object;)V
+       304: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       307: ldc_w         #432                // String Perhaps a server is already running on that port?
+       310: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       315: iconst_0
+       316: ireturn
+       317: aload_0
+       318: invokevirtual #434                // Method usesAuthentication:()Z
+       321: ifne          368
+       324: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       327: ldc_w         #437                // String **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+       330: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       335: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       338: ldc_w         #439                // String The server will make no attempt to authenticate usernames. Beware.
+       341: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       346: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       349: ldc_w         #441                // String While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+       352: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       357: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       360: ldc_w         #443                // String To change this, set \"online-mode\" to \"true\" in the server.properties file.
+       363: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       368: aload_0
+       369: invokevirtual #445                // Method convertOldUsers:()Z
+       372: ifeq          387
+       375: aload_0
+       376: getfield      #448                // Field services:Lnet/minecraft/server/Services;
+       379: invokevirtual #452                // Method net/minecraft/server/Services.nameToIdCache:()Lnet/minecraft/server/players/UserNameToIdResolver;
+       382: invokeinterface #458,  1          // InterfaceMethod net/minecraft/server/players/UserNameToIdResolver.save:()V
+       387: invokestatic  #463                // Method net/minecraft/server/players/OldUsersConverter.areOldUserlistsRemoved:()Z
+       390: ifne          395
+       393: iconst_0
+       394: ireturn
+       395: aload_0
+       396: new           #468                // class net/minecraft/server/dedicated/DedicatedPlayerList
+       399: dup
+       400: aload_0
+       401: aload_0
+       402: invokevirtual #470                // Method registries:()Lnet/minecraft/core/LayeredRegistryAccess;
+       405: aload_0
+       406: getfield      #474                // Field playerDataStorage:Lnet/minecraft/world/level/storage/PlayerDataStorage;
+       409: invokespecial #478                // Method net/minecraft/server/dedicated/DedicatedPlayerList."<init>":(Lnet/minecraft/server/dedicated/DedicatedServer;Lnet/minecraft/core/LayeredRegistryAccess;Lnet/minecraft/world/level/storage/PlayerDataStorage;)V
+       412: invokevirtual #481                // Method setPlayerList:(Lnet/minecraft/server/players/PlayerList;)V
+       415: aload_0
+       416: new           #485                // class net/minecraft/util/debugchart/RemoteSampleLogger
+       419: dup
+       420: invokestatic  #487                // Method net/minecraft/util/debugchart/TpsDebugDimensions.values:()[Lnet/minecraft/util/debugchart/TpsDebugDimensions;
+       423: arraylength
+       424: aload_0
+       425: invokevirtual #493                // Method debugSubscribers:()Lnet/minecraft/util/debug/ServerDebugSubscribers;
+       428: getstatic     #497                // Field net/minecraft/util/debugchart/RemoteDebugSampleType.TICK_TIME:Lnet/minecraft/util/debugchart/RemoteDebugSampleType;
+       431: invokespecial #503                // Method net/minecraft/util/debugchart/RemoteSampleLogger."<init>":(ILnet/minecraft/util/debug/ServerDebugSubscribers;Lnet/minecraft/util/debugchart/RemoteDebugSampleType;)V
+       434: putfield      #506                // Field tickTimeLogger:Lnet/minecraft/util/debugchart/RemoteSampleLogger;
+       437: invokestatic  #510                // Method net/minecraft/util/Util.getNanos:()J
+       440: lstore        4
+       442: aload_0
+       443: getfield      #448                // Field services:Lnet/minecraft/server/Services;
+       446: invokevirtual #452                // Method net/minecraft/server/Services.nameToIdCache:()Lnet/minecraft/server/players/UserNameToIdResolver;
+       449: aload_0
+       450: invokevirtual #434                // Method usesAuthentication:()Z
+       453: ifne          460
+       456: iconst_1
+       457: goto          461
+       460: iconst_0
+       461: invokeinterface #515,  2          // InterfaceMethod net/minecraft/server/players/UserNameToIdResolver.resolveOfflineUsers:(Z)V
+       466: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       469: ldc_w         #518                // String Preparing level \"{}\"
+       472: aload_0
+       473: invokevirtual #520                // Method getLevelIdName:()Ljava/lang/String;
+       476: invokeinterface #301,  3          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;Ljava/lang/Object;)V
+       481: aload_0
+       482: invokevirtual #523                // Method loadLevel:()V
+       485: invokestatic  #510                // Method net/minecraft/util/Util.getNanos:()J
+       488: lload         4
+       490: lsub
+       491: lstore        6
+       493: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       496: ldc_w         #526                // String %.3fs
+       499: iconst_1
+       500: anewarray     #528                // class java/lang/Object
+       503: dup
+       504: iconst_0
+       505: lload         6
+       507: l2d
+       508: ldc2_w        #530                // double 1.0E9d
+       511: ddiv
+       512: invokestatic  #532                // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+       515: aastore
+       516: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       519: astore        8
+       521: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       524: ldc_w         #541                // String Done ({})! For help, type \"help\"
+       527: aload         8
+       529: invokeinterface #301,  3          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;Ljava/lang/Object;)V
+       534: aload_2
+       535: getfield      #543                // Field net/minecraft/server/dedicated/DedicatedServerProperties.announcePlayerAchievements:Ljava/lang/Boolean;
+       538: ifnull        556
+       541: aload_0
+       542: invokevirtual #547                // Method getGameRules:()Lnet/minecraft/world/level/gamerules/GameRules;
+       545: getstatic     #551                // Field net/minecraft/world/level/gamerules/GameRules.SHOW_ADVANCEMENT_MESSAGES:Lnet/minecraft/world/level/gamerules/GameRule;
+       548: aload_2
+       549: getfield      #543                // Field net/minecraft/server/dedicated/DedicatedServerProperties.announcePlayerAchievements:Ljava/lang/Boolean;
+       552: aload_0
+       553: invokevirtual #557                // Method net/minecraft/world/level/gamerules/GameRules.set:(Lnet/minecraft/world/level/gamerules/GameRule;Ljava/lang/Object;Lnet/minecraft/server/MinecraftServer;)V
+       556: aload_2
+       557: getfield      #561                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enableQuery:Z
+       560: ifeq          582
+       563: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       566: ldc_w         #564                // String Starting GS4 status listener
+       569: invokeinterface #328,  2          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;)V
+       574: aload_0
+       575: aload_0
+       576: invokestatic  #566                // Method net/minecraft/server/rcon/thread/QueryThreadGs4.create:(Lnet/minecraft/server/ServerInterface;)Lnet/minecraft/server/rcon/thread/QueryThreadGs4;
+       579: putfield      #572                // Field queryThreadGs4:Lnet/minecraft/server/rcon/thread/QueryThreadGs4;
+       582: aload_2
+       583: getfield      #576                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enableRcon:Z
+       586: ifeq          608
+       589: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       592: ldc_w         #579                // String Starting remote control listener
+       595: invokeinterface #328,  2          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;)V
+       600: aload_0
+       601: aload_0
+       602: invokestatic  #581                // Method net/minecraft/server/rcon/thread/RconThread.create:(Lnet/minecraft/server/ServerInterface;)Lnet/minecraft/server/rcon/thread/RconThread;
+       605: putfield      #586                // Field rconThread:Lnet/minecraft/server/rcon/thread/RconThread;
+       608: aload_0
+       609: invokevirtual #590                // Method getMaxTickLength:()J
+       612: lconst_0
+       613: lcmp
+       614: ifle          663
+       617: new           #267                // class java/lang/Thread
+       620: dup
+       621: new           #593                // class net/minecraft/server/dedicated/ServerWatchdog
+       624: dup
+       625: aload_0
+       626: invokespecial #595                // Method net/minecraft/server/dedicated/ServerWatchdog."<init>":(Lnet/minecraft/server/dedicated/DedicatedServer;)V
+       629: ldc_w         #598                // String Server Watchdog
+       632: invokespecial #600                // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;Ljava/lang/String;)V
+       635: astore        9
+       637: aload         9
+       639: new           #603                // class net/minecraft/DefaultUncaughtExceptionHandlerWithName
+       642: dup
+       643: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       646: invokespecial #605                // Method net/minecraft/DefaultUncaughtExceptionHandlerWithName."<init>":(Lorg/slf4j/Logger;)V
+       649: invokevirtual #281                // Method java/lang/Thread.setUncaughtExceptionHandler:(Ljava/lang/Thread$UncaughtExceptionHandler;)V
+       652: aload         9
+       654: iconst_1
+       655: invokevirtual #266                // Method java/lang/Thread.setDaemon:(Z)V
+       658: aload         9
+       660: invokevirtual #285                // Method java/lang/Thread.start:()V
+       663: aload_2
+       664: getfield      #606                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enableJmxMonitoring:Z
+       667: ifeq          685
+       670: aload_0
+       671: invokestatic  #609                // Method net/minecraft/util/monitoring/jmx/MinecraftServerStatistics.registerJmxMonitoring:(Lnet/minecraft/server/MinecraftServer;)V
+       674: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       677: ldc_w         #614                // String JMX monitoring enabled
+       680: invokeinterface #328,  2          // InterfaceMethod org/slf4j/Logger.info:(Ljava/lang/String;)V
+       685: aload_0
+       686: iconst_0
+       687: iconst_1
+       688: iconst_1
+       689: invokevirtual #616                // Method saveEverything:(ZZZ)Z
+       692: pop
+       693: aload_0
+       694: invokevirtual #620                // Method notificationManager:()Lnet/minecraft/server/notifications/NotificationManager;
+       697: invokevirtual #624                // Method net/minecraft/server/notifications/NotificationManager.serverStarted:()V
+       700: iconst_1
+       701: ireturn
+      Exception table:
+         from    to  target type
+           260   272   275   Class java/io/IOException
+
+  public boolean isEnforceWhitelist();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #629                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enforceWhitelist:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #632                // class java/lang/Boolean
+        16: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        19: ireturn
+
+  public void setEnforceWhitelist(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #637,  0            // InvokeDynamic #3:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public boolean isUsingWhitelist();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #645                // Field net/minecraft/server/dedicated/DedicatedServerProperties.whiteList:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #632                // class java/lang/Boolean
+        16: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        19: ireturn
+
+  public void setUsingWhitelist(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #648,  0            // InvokeDynamic #4:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  protected void tickServer(java.util.function.BooleanSupplier);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: invokespecial #649                // Method net/minecraft/server/MinecraftServer.tickServer:(Ljava/util/function/BooleanSupplier;)V
+         5: aload_0
+         6: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+         9: ifnull        19
+        12: aload_0
+        13: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+        16: invokevirtual #653                // Method net/minecraft/server/jsonrpc/ManagementServer.tick:()V
+        19: return
+
+  public boolean saveAllChunks(boolean, boolean, boolean);
+    Code:
+         0: aload_0
+         1: invokevirtual #620                // Method notificationManager:()Lnet/minecraft/server/notifications/NotificationManager;
+         4: invokevirtual #658                // Method net/minecraft/server/notifications/NotificationManager.serverSaveStarted:()V
+         7: aload_0
+         8: iload_1
+         9: iload_2
+        10: iload_3
+        11: invokespecial #661                // Method net/minecraft/server/MinecraftServer.saveAllChunks:(ZZZ)Z
+        14: istore        4
+        16: aload_0
+        17: invokevirtual #620                // Method notificationManager:()Lnet/minecraft/server/notifications/NotificationManager;
+        20: invokevirtual #664                // Method net/minecraft/server/notifications/NotificationManager.serverSaveCompleted:()V
+        23: iload         4
+        25: ireturn
+
+  public void sendLowDiskSpaceWarning();
+    Code:
+         0: aload_0
+         1: invokespecial #667                // Method net/minecraft/server/MinecraftServer.sendLowDiskSpaceWarning:()V
+         4: new           #670                // class net/minecraft/server/permissions/Permission$HasCommandLevel
+         7: dup
+         8: getstatic     #672                // Field net/minecraft/server/permissions/PermissionLevel.ADMINS:Lnet/minecraft/server/permissions/PermissionLevel;
+        11: invokespecial #678                // Method net/minecraft/server/permissions/Permission$HasCommandLevel."<init>":(Lnet/minecraft/server/permissions/PermissionLevel;)V
+        14: astore_1
+        15: aload_0
+        16: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+        19: invokevirtual #685                // Method net/minecraft/server/dedicated/DedicatedPlayerList.getPlayers:()Ljava/util/List;
+        22: invokeinterface #688,  1          // InterfaceMethod java/util/List.stream:()Ljava/util/stream/Stream;
+        27: aload_1
+        28: invokedynamic #692,  0            // InvokeDynamic #5:test:(Lnet/minecraft/server/permissions/Permission$HasCommandLevel;)Ljava/util/function/Predicate;
+        33: invokeinterface #696,  2          // InterfaceMethod java/util/stream/Stream.filter:(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;
+        38: invokedynamic #700,  0            // InvokeDynamic #6:accept:()Ljava/util/function/Consumer;
+        43: invokeinterface #704,  2          // InterfaceMethod java/util/stream/Stream.forEach:(Ljava/util/function/Consumer;)V
+        48: return
+
+  public boolean allowFlight();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #708                // Field net/minecraft/server/dedicated/DedicatedServerProperties.allowFlight:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #632                // class java/lang/Boolean
+        16: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        19: ireturn
+
+  public void setAllowFlight(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #711,  0            // InvokeDynamic #7:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public net.minecraft.server.dedicated.DedicatedServerProperties getProperties();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: areturn
+
+  public void setDifficulty(net.minecraft.world.Difficulty);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: aload_1
+         6: invokedynamic #712,  0            // InvokeDynamic #8:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Lnet/minecraft/world/Difficulty;)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: aload_0
+        16: invokevirtual #715                // Method forceDifficulty:()V
+        19: return
+
+  protected void forceDifficulty();
+    Code:
+         0: aload_0
+         1: aload_0
+         2: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         5: getfield      #719                // Field net/minecraft/server/dedicated/DedicatedServerProperties.difficulty:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         8: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        11: checkcast     #722                // class net/minecraft/world/Difficulty
+        14: iconst_1
+        15: invokevirtual #724                // Method setDifficulty:(Lnet/minecraft/world/Difficulty;Z)V
+        18: return
+
+  public int viewDistance();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #728                // Field net/minecraft/server/dedicated/DedicatedServerProperties.viewDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public void setViewDistance(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #734,  0            // InvokeDynamic #9:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: aload_0
+        16: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+        19: iload_1
+        20: invokevirtual #737                // Method net/minecraft/server/dedicated/DedicatedPlayerList.setViewDistance:(I)V
+        23: return
+
+  public int simulationDistance();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #740                // Field net/minecraft/server/dedicated/DedicatedServerProperties.simulationDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public void setSimulationDistance(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #743,  0            // InvokeDynamic #10:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: aload_0
+        16: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+        19: iload_1
+        20: invokevirtual #744                // Method net/minecraft/server/dedicated/DedicatedPlayerList.setSimulationDistance:(I)V
+        23: return
+
+  public net.minecraft.SystemReport fillServerSystemReport(net.minecraft.SystemReport);
+    Code:
+         0: aload_1
+         1: ldc_w         #747                // String Is Modded
+         4: aload_0
+         5: invokedynamic #749,  0            // InvokeDynamic #11:call:(Lnet/minecraft/server/dedicated/DedicatedServer;)Lnet/minecraft/CrashReportDetail;
+        10: invokevirtual #753                // Method net/minecraft/SystemReport.setDetail:(Ljava/lang/String;Lnet/minecraft/CrashReportDetail;)V
+        13: aload_1
+        14: ldc_w         #759                // String Type
+        17: invokedynamic #761,  0            // InvokeDynamic #12:call:()Lnet/minecraft/CrashReportDetail;
+        22: invokevirtual #753                // Method net/minecraft/SystemReport.setDetail:(Ljava/lang/String;Lnet/minecraft/CrashReportDetail;)V
+        25: aload_1
+        26: areturn
+
+  public void dumpServerProperties(java.nio.file.Path) throws java.io.IOException;
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: astore_2
+         5: aload_1
+         6: iconst_0
+         7: anewarray     #764                // class java/nio/file/OpenOption
+        10: invokestatic  #766                // Method java/nio/file/Files.newBufferedWriter:(Ljava/nio/file/Path;[Ljava/nio/file/OpenOption;)Ljava/io/BufferedWriter;
+        13: astore_3
+        14: aload_3
+        15: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+        18: ldc_w         #770                // String sync-chunk-writes=%s%n
+        21: iconst_1
+        22: anewarray     #528                // class java/lang/Object
+        25: dup
+        26: iconst_0
+        27: aload_2
+        28: getfield      #772                // Field net/minecraft/server/dedicated/DedicatedServerProperties.syncChunkWrites:Z
+        31: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        34: aastore
+        35: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+        38: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+        41: aload_3
+        42: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+        45: ldc_w         #783                // String gamemode=%s%n
+        48: iconst_1
+        49: anewarray     #528                // class java/lang/Object
+        52: dup
+        53: iconst_0
+        54: aload_2
+        55: getfield      #358                // Field net/minecraft/server/dedicated/DedicatedServerProperties.gameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        58: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        61: aastore
+        62: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+        65: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+        68: aload_3
+        69: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+        72: ldc_w         #785                // String entity-broadcast-range-percentage=%d%n
+        75: iconst_1
+        76: anewarray     #528                // class java/lang/Object
+        79: dup
+        80: iconst_0
+        81: aload_2
+        82: getfield      #787                // Field net/minecraft/server/dedicated/DedicatedServerProperties.entityBroadcastRangePercentage:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        85: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        88: aastore
+        89: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+        92: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+        95: aload_3
+        96: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+        99: ldc_w         #790                // String max-world-size=%d%n
+       102: iconst_1
+       103: anewarray     #528                // class java/lang/Object
+       106: dup
+       107: iconst_0
+       108: aload_2
+       109: getfield      #792                // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxWorldSize:I
+       112: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       115: aastore
+       116: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       119: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       122: aload_3
+       123: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       126: ldc_w         #795                // String view-distance=%d%n
+       129: iconst_1
+       130: anewarray     #528                // class java/lang/Object
+       133: dup
+       134: iconst_0
+       135: aload_2
+       136: getfield      #728                // Field net/minecraft/server/dedicated/DedicatedServerProperties.viewDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+       139: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+       142: aastore
+       143: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       146: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       149: aload_3
+       150: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       153: ldc_w         #797                // String simulation-distance=%d%n
+       156: iconst_1
+       157: anewarray     #528                // class java/lang/Object
+       160: dup
+       161: iconst_0
+       162: aload_2
+       163: getfield      #740                // Field net/minecraft/server/dedicated/DedicatedServerProperties.simulationDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+       166: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+       169: aastore
+       170: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       173: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       176: aload_3
+       177: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       180: ldc_w         #799                // String generate-structures=%s%n
+       183: iconst_1
+       184: anewarray     #528                // class java/lang/Object
+       187: dup
+       188: iconst_0
+       189: aload_2
+       190: getfield      #801                // Field net/minecraft/server/dedicated/DedicatedServerProperties.worldOptions:Lnet/minecraft/world/level/levelgen/WorldOptions;
+       193: invokevirtual #805                // Method net/minecraft/world/level/levelgen/WorldOptions.generateStructures:()Z
+       196: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+       199: aastore
+       200: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       203: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       206: aload_3
+       207: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       210: ldc_w         #810                // String use-native=%s%n
+       213: iconst_1
+       214: anewarray     #528                // class java/lang/Object
+       217: dup
+       218: iconst_0
+       219: aload_2
+       220: getfield      #812                // Field net/minecraft/server/dedicated/DedicatedServerProperties.useNativeTransport:Z
+       223: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+       226: aastore
+       227: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       230: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       233: aload_3
+       234: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       237: ldc_w         #815                // String rate-limit=%d%n
+       240: iconst_1
+       241: anewarray     #528                // class java/lang/Object
+       244: dup
+       245: iconst_0
+       246: aload_2
+       247: getfield      #817                // Field net/minecraft/server/dedicated/DedicatedServerProperties.rateLimitPacketsPerSecond:I
+       250: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       253: aastore
+       254: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       257: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       260: aload_3
+       261: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       264: ldc_w         #820                // String command-spam-threshold-seconds=%d%n
+       267: iconst_1
+       268: anewarray     #528                // class java/lang/Object
+       271: dup
+       272: iconst_0
+       273: aload_2
+       274: getfield      #822                // Field net/minecraft/server/dedicated/DedicatedServerProperties.commandSpamThresholdSeconds:I
+       277: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       280: aastore
+       281: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       284: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       287: aload_3
+       288: getstatic     #185                // Field java/util/Locale.ROOT:Ljava/util/Locale;
+       291: ldc_w         #825                // String chat-spam-threshold-seconds=%d%n
+       294: iconst_1
+       295: anewarray     #528                // class java/lang/Object
+       298: dup
+       299: iconst_0
+       300: aload_2
+       301: getfield      #827                // Field net/minecraft/server/dedicated/DedicatedServerProperties.chatSpamThresholdSeconds:I
+       304: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       307: aastore
+       308: invokestatic  #537                // Method java/lang/String.format:(Ljava/util/Locale;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+       311: invokevirtual #778                // Method java/io/Writer.write:(Ljava/lang/String;)V
+       314: aload_3
+       315: ifnull        350
+       318: aload_3
+       319: invokevirtual #830                // Method java/io/Writer.close:()V
+       322: goto          350
+       325: astore        4
+       327: aload_3
+       328: ifnull        347
+       331: aload_3
+       332: invokevirtual #830                // Method java/io/Writer.close:()V
+       335: goto          347
+       338: astore        5
+       340: aload         4
+       342: aload         5
+       344: invokevirtual #249                // Method java/lang/Throwable.addSuppressed:(Ljava/lang/Throwable;)V
+       347: aload         4
+       349: athrow
+       350: return
+      Exception table:
+         from    to  target type
+            14   314   325   Class java/lang/Throwable
+           331   335   338   Class java/lang/Throwable
+
+  protected void onServerExit();
+    Code:
+         0: aload_0
+         1: getfield      #62                 // Field serverTextFilter:Lnet/minecraft/server/network/ServerTextFilter;
+         4: ifnull        14
+         7: aload_0
+         8: getfield      #62                 // Field serverTextFilter:Lnet/minecraft/server/network/ServerTextFilter;
+        11: invokevirtual #831                // Method net/minecraft/server/network/ServerTextFilter.close:()V
+        14: aload_0
+        15: getfield      #832                // Field gui:Lnet/minecraft/server/gui/MinecraftServerGui;
+        18: ifnull        28
+        21: aload_0
+        22: getfield      #832                // Field gui:Lnet/minecraft/server/gui/MinecraftServerGui;
+        25: invokevirtual #836                // Method net/minecraft/server/gui/MinecraftServerGui.close:()V
+        28: aload_0
+        29: getfield      #586                // Field rconThread:Lnet/minecraft/server/rcon/thread/RconThread;
+        32: ifnull        42
+        35: aload_0
+        36: getfield      #586                // Field rconThread:Lnet/minecraft/server/rcon/thread/RconThread;
+        39: invokevirtual #839                // Method net/minecraft/server/rcon/thread/RconThread.stop:()V
+        42: aload_0
+        43: getfield      #572                // Field queryThreadGs4:Lnet/minecraft/server/rcon/thread/QueryThreadGs4;
+        46: ifnull        56
+        49: aload_0
+        50: getfield      #572                // Field queryThreadGs4:Lnet/minecraft/server/rcon/thread/QueryThreadGs4;
+        53: invokevirtual #842                // Method net/minecraft/server/rcon/thread/QueryThreadGs4.stop:()V
+        56: aload_0
+        57: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+        60: ifnull        87
+        63: aload_0
+        64: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+        67: iconst_1
+        68: invokevirtual #843                // Method net/minecraft/server/jsonrpc/ManagementServer.stop:(Z)V
+        71: goto          87
+        74: astore_1
+        75: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        78: ldc_w         #847                // String Interrupted while stopping the management server
+        81: aload_1
+        82: invokeinterface #849,  3          // InterfaceMethod org/slf4j/Logger.error:(Ljava/lang/String;Ljava/lang/Throwable;)V
+        87: return
+      Exception table:
+         from    to  target type
+            63    71    74   Class java/lang/InterruptedException
+
+  protected void tickConnection();
+    Code:
+         0: aload_0
+         1: invokespecial #852                // Method net/minecraft/server/MinecraftServer.tickConnection:()V
+         4: aload_0
+         5: invokevirtual #855                // Method handleConsoleInputs:()V
+         8: return
+
+  public void handleConsoleInput(java.lang.String, net.minecraft.commands.CommandSourceStack);
+    Code:
+         0: aload_0
+         1: getfield      #31                 // Field consoleInput:Ljava/util/List;
+         4: new           #858                // class net/minecraft/server/ConsoleInput
+         7: dup
+         8: aload_1
+         9: aload_2
+        10: invokespecial #860                // Method net/minecraft/server/ConsoleInput."<init>":(Ljava/lang/String;Lnet/minecraft/commands/CommandSourceStack;)V
+        13: invokeinterface #863,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+        18: pop
+        19: return
+
+  public void handleConsoleInputs();
+    Code:
+         0: aload_0
+         1: getfield      #31                 // Field consoleInput:Ljava/util/List;
+         4: invokeinterface #866,  1          // InterfaceMethod java/util/List.isEmpty:()Z
+         9: ifne          44
+        12: aload_0
+        13: getfield      #31                 // Field consoleInput:Ljava/util/List;
+        16: iconst_0
+        17: invokeinterface #867,  2          // InterfaceMethod java/util/List.remove:(I)Ljava/lang/Object;
+        22: checkcast     #858                // class net/minecraft/server/ConsoleInput
+        25: astore_1
+        26: aload_0
+        27: invokevirtual #871                // Method getCommands:()Lnet/minecraft/commands/Commands;
+        30: aload_1
+        31: getfield      #875                // Field net/minecraft/server/ConsoleInput.source:Lnet/minecraft/commands/CommandSourceStack;
+        34: aload_1
+        35: getfield      #879                // Field net/minecraft/server/ConsoleInput.msg:Ljava/lang/String;
+        38: invokevirtual #882                // Method net/minecraft/commands/Commands.performPrefixedCommand:(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V
+        41: goto          0
+        44: return
+
+  public boolean isDedicatedServer();
+    Code:
+         0: iconst_1
+         1: ireturn
+
+  public int getRateLimitPacketsPerSecond();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #817                // Field net/minecraft/server/dedicated/DedicatedServerProperties.rateLimitPacketsPerSecond:I
+         7: ireturn
+
+  public int getCommandSpamThresholdSeconds();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #822                // Field net/minecraft/server/dedicated/DedicatedServerProperties.commandSpamThresholdSeconds:I
+         7: ireturn
+
+  public int getChatSpamThresholdSeconds();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #827                // Field net/minecraft/server/dedicated/DedicatedServerProperties.chatSpamThresholdSeconds:I
+         7: ireturn
+
+  public boolean useNativeTransport();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #812                // Field net/minecraft/server/dedicated/DedicatedServerProperties.useNativeTransport:Z
+         7: ireturn
+
+  public net.minecraft.server.dedicated.DedicatedPlayerList getPlayerList();
+    Code:
+         0: aload_0
+         1: invokespecial #888                // Method net/minecraft/server/MinecraftServer.getPlayerList:()Lnet/minecraft/server/players/PlayerList;
+         4: checkcast     #468                // class net/minecraft/server/dedicated/DedicatedPlayerList
+         7: areturn
+
+  public int getMaxPlayers();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #891                // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxPlayers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public void setMaxPlayers(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #894,  0            // InvokeDynamic #13:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public boolean isPublished();
+    Code:
+         0: iconst_1
+         1: ireturn
+
+  public java.lang.String getServerIp();
+    Code:
+         0: aload_0
+         1: invokevirtual #377                // Method getLocalIp:()Ljava/lang/String;
+         4: areturn
+
+  public int getServerPort();
+    Code:
+         0: aload_0
+         1: invokevirtual #389                // Method getPort:()I
+         4: ireturn
+
+  public java.lang.String getServerName();
+    Code:
+         0: aload_0
+         1: invokevirtual #895                // Method getMotd:()Ljava/lang/String;
+         4: areturn
+
+  public void showGui();
+    Code:
+         0: aload_0
+         1: getfield      #832                // Field gui:Lnet/minecraft/server/gui/MinecraftServerGui;
+         4: ifnonnull     15
+         7: aload_0
+         8: aload_0
+         9: invokestatic  #898                // Method net/minecraft/server/gui/MinecraftServerGui.showFrameFor:(Lnet/minecraft/server/dedicated/DedicatedServer;)Lnet/minecraft/server/gui/MinecraftServerGui;
+        12: putfield      #832                // Field gui:Lnet/minecraft/server/gui/MinecraftServerGui;
+        15: return
+
+  public int spawnProtectionRadius();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #902                // Field net/minecraft/server/dedicated/DedicatedServerProperties.spawnProtection:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #408                // class java/lang/Integer
+        13: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        16: ireturn
+
+  public void setSpawnProtectionRadius(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #905,  0            // InvokeDynamic #14:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public boolean isUnderSpawnProtection(net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.world.entity.player.Player);
+    Code:
+         0: aload_1
+         1: invokevirtual #906                // Method net/minecraft/server/level/ServerLevel.getRespawnData:()Lnet/minecraft/world/level/storage/LevelData$RespawnData;
+         4: astore        4
+         6: aload_1
+         7: invokevirtual #912                // Method net/minecraft/server/level/ServerLevel.dimension:()Lnet/minecraft/resources/ResourceKey;
+        10: aload         4
+        12: invokevirtual #916                // Method net/minecraft/world/level/storage/LevelData$RespawnData.dimension:()Lnet/minecraft/resources/ResourceKey;
+        15: if_acmpeq     20
+        18: iconst_0
+        19: ireturn
+        20: aload_0
+        21: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+        24: invokevirtual #919                // Method net/minecraft/server/dedicated/DedicatedPlayerList.getOps:()Lnet/minecraft/server/players/ServerOpList;
+        27: invokevirtual #923                // Method net/minecraft/server/players/ServerOpList.isEmpty:()Z
+        30: ifeq          35
+        33: iconst_0
+        34: ireturn
+        35: aload_0
+        36: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+        39: aload_3
+        40: invokevirtual #926                // Method net/minecraft/world/entity/player/Player.nameAndId:()Lnet/minecraft/server/players/NameAndId;
+        43: invokevirtual #932                // Method net/minecraft/server/dedicated/DedicatedPlayerList.isOp:(Lnet/minecraft/server/players/NameAndId;)Z
+        46: ifeq          51
+        49: iconst_0
+        50: ireturn
+        51: aload_0
+        52: invokevirtual #936                // Method spawnProtectionRadius:()I
+        55: ifgt          60
+        58: iconst_0
+        59: ireturn
+        60: aload         4
+        62: invokevirtual #939                // Method net/minecraft/world/level/storage/LevelData$RespawnData.pos:()Lnet/minecraft/core/BlockPos;
+        65: astore        5
+        67: aload_2
+        68: invokevirtual #943                // Method net/minecraft/core/BlockPos.getX:()I
+        71: aload         5
+        73: invokevirtual #943                // Method net/minecraft/core/BlockPos.getX:()I
+        76: isub
+        77: invokestatic  #948                // Method net/minecraft/util/Mth.abs:(I)I
+        80: istore        6
+        82: aload_2
+        83: invokevirtual #954                // Method net/minecraft/core/BlockPos.getZ:()I
+        86: aload         5
+        88: invokevirtual #954                // Method net/minecraft/core/BlockPos.getZ:()I
+        91: isub
+        92: invokestatic  #948                // Method net/minecraft/util/Mth.abs:(I)I
+        95: istore        7
+        97: iload         6
+        99: iload         7
+       101: invokestatic  #957                // Method java/lang/Math.max:(II)I
+       104: istore        8
+       106: iload         8
+       108: aload_0
+       109: invokevirtual #936                // Method spawnProtectionRadius:()I
+       112: if_icmpgt     119
+       115: iconst_1
+       116: goto          120
+       119: iconst_0
+       120: ireturn
+
+  public boolean repliesToStatus();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #963                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enableStatus:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #632                // class java/lang/Boolean
+        13: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        16: ireturn
+
+  public void setRepliesToStatus(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #966,  0            // InvokeDynamic #15:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public boolean hidesOnlinePlayers();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #967                // Field net/minecraft/server/dedicated/DedicatedServerProperties.hideOnlinePlayers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #632                // class java/lang/Boolean
+        13: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        16: ireturn
+
+  public void setHidesOnlinePlayers(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #970,  0            // InvokeDynamic #16:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public net.minecraft.server.permissions.LevelBasedPermissionSet operatorUserPermissions();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #971                // Field net/minecraft/server/dedicated/DedicatedServerProperties.opPermissions:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #974                // class net/minecraft/server/permissions/LevelBasedPermissionSet
+        13: areturn
+
+  public void setOperatorUserPermissions(net.minecraft.server.permissions.LevelBasedPermissionSet);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: aload_1
+         6: invokedynamic #976,  0            // InvokeDynamic #17:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Lnet/minecraft/server/permissions/LevelBasedPermissionSet;)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public net.minecraft.server.permissions.PermissionSet getFunctionCompilationPermissions();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #979                // Field net/minecraft/server/dedicated/DedicatedServerProperties.functionPermissions:Lnet/minecraft/server/permissions/LevelBasedPermissionSet;
+         7: areturn
+
+  public int playerIdleTimeout();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #983                // Field net/minecraft/server/dedicated/DedicatedServerProperties.playerIdleTimeout:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public void setPlayerIdleTimeout(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #986,  0            // InvokeDynamic #18:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public int statusHeartbeatInterval();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #987                // Field net/minecraft/server/dedicated/DedicatedServerProperties.statusHeartbeatInterval:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public boolean setStatusHeartbeatInterval(int);
+    Code:
+         0: aload_0
+         1: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+         4: ifnull        40
+         7: aload_0
+         8: getfield      #66                 // Field jsonRpcServer:Lnet/minecraft/server/jsonrpc/ManagementServer;
+        11: aload_0
+        12: invokevirtual #620                // Method notificationManager:()Lnet/minecraft/server/notifications/NotificationManager;
+        15: iload_1
+        16: i2l
+        17: invokevirtual #990                // Method net/minecraft/server/jsonrpc/ManagementServer.scheduleHeartbeat:(Lnet/minecraft/server/notifications/NotificationManager;J)Z
+        20: ifeq          40
+        23: aload_0
+        24: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        27: aload_0
+        28: iload_1
+        29: invokedynamic #994,  0            // InvokeDynamic #19:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        34: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        37: pop
+        38: iconst_1
+        39: ireturn
+        40: iconst_0
+        41: ireturn
+
+  public java.lang.String getMotd();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #995                // Field net/minecraft/server/dedicated/DedicatedServerProperties.motd:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #99                 // class java/lang/String
+        16: areturn
+
+  public void setMotd(java.lang.String);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: aload_1
+         6: invokedynamic #998,  0            // InvokeDynamic #20:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Ljava/lang/String;)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public boolean shouldRconBroadcast();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1001               // Field net/minecraft/server/dedicated/DedicatedServerProperties.broadcastRconToOps:Z
+         7: ireturn
+
+  public boolean shouldInformAdmins();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1004               // Field net/minecraft/server/dedicated/DedicatedServerProperties.broadcastConsoleToOps:Z
+         7: ireturn
+
+  public int getAbsoluteMaxWorldSize();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #792                // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxWorldSize:I
+         7: ireturn
+
+  public int getCompressionThreshold();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1007               // Field net/minecraft/server/dedicated/DedicatedServerProperties.networkCompressionThreshold:I
+         7: ireturn
+
+  public boolean enforceSecureProfile();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: astore_1
+         5: aload_1
+         6: getfield      #1010               // Field net/minecraft/server/dedicated/DedicatedServerProperties.enforceSecureProfile:Z
+         9: ifeq          33
+        12: aload_1
+        13: getfield      #338                // Field net/minecraft/server/dedicated/DedicatedServerProperties.onlineMode:Z
+        16: ifeq          33
+        19: aload_0
+        20: getfield      #448                // Field services:Lnet/minecraft/server/Services;
+        23: invokevirtual #1013               // Method net/minecraft/server/Services.canValidateProfileKeys:()Z
+        26: ifeq          33
+        29: iconst_1
+        30: goto          34
+        33: iconst_0
+        34: ireturn
+
+  public boolean logIPs();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1016               // Field net/minecraft/server/dedicated/DedicatedServerProperties.logIPs:Z
+         7: ireturn
+
+  protected boolean convertOldUsers();
+    Code:
+         0: iconst_0
+         1: istore_2
+         2: iconst_0
+         3: istore_1
+         4: iload_2
+         5: ifne          43
+         8: iload_1
+         9: iconst_2
+        10: if_icmpgt     43
+        13: iload_1
+        14: ifle          32
+        17: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        20: ldc_w         #1019               // String Encountered a problem while converting the user banlist, retrying in a few seconds
+        23: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+        28: aload_0
+        29: invokevirtual #1021               // Method waitForRetry:()V
+        32: aload_0
+        33: invokestatic  #1024               // Method net/minecraft/server/players/OldUsersConverter.convertUserBanlist:(Lnet/minecraft/server/MinecraftServer;)Z
+        36: istore_2
+        37: iinc          1, 1
+        40: goto          4
+        43: iconst_0
+        44: istore_3
+        45: iconst_0
+        46: istore_1
+        47: iload_3
+        48: ifne          86
+        51: iload_1
+        52: iconst_2
+        53: if_icmpgt     86
+        56: iload_1
+        57: ifle          75
+        60: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        63: ldc_w         #1028               // String Encountered a problem while converting the ip banlist, retrying in a few seconds
+        66: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+        71: aload_0
+        72: invokevirtual #1021               // Method waitForRetry:()V
+        75: aload_0
+        76: invokestatic  #1030               // Method net/minecraft/server/players/OldUsersConverter.convertIpBanlist:(Lnet/minecraft/server/MinecraftServer;)Z
+        79: istore_3
+        80: iinc          1, 1
+        83: goto          47
+        86: iconst_0
+        87: istore        4
+        89: iconst_0
+        90: istore_1
+        91: iload         4
+        93: ifne          132
+        96: iload_1
+        97: iconst_2
+        98: if_icmpgt     132
+       101: iload_1
+       102: ifle          120
+       105: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       108: ldc_w         #1033               // String Encountered a problem while converting the op list, retrying in a few seconds
+       111: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       116: aload_0
+       117: invokevirtual #1021               // Method waitForRetry:()V
+       120: aload_0
+       121: invokestatic  #1035               // Method net/minecraft/server/players/OldUsersConverter.convertOpsList:(Lnet/minecraft/server/MinecraftServer;)Z
+       124: istore        4
+       126: iinc          1, 1
+       129: goto          91
+       132: iconst_0
+       133: istore        5
+       135: iconst_0
+       136: istore_1
+       137: iload         5
+       139: ifne          178
+       142: iload_1
+       143: iconst_2
+       144: if_icmpgt     178
+       147: iload_1
+       148: ifle          166
+       151: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       154: ldc_w         #1038               // String Encountered a problem while converting the whitelist, retrying in a few seconds
+       157: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       162: aload_0
+       163: invokevirtual #1021               // Method waitForRetry:()V
+       166: aload_0
+       167: invokestatic  #1040               // Method net/minecraft/server/players/OldUsersConverter.convertWhiteList:(Lnet/minecraft/server/MinecraftServer;)Z
+       170: istore        5
+       172: iinc          1, 1
+       175: goto          137
+       178: iconst_0
+       179: istore        6
+       181: iconst_0
+       182: istore_1
+       183: iload         6
+       185: ifne          224
+       188: iload_1
+       189: iconst_2
+       190: if_icmpgt     224
+       193: iload_1
+       194: ifle          212
+       197: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+       200: ldc_w         #1043               // String Encountered a problem while converting the player save files, retrying in a few seconds
+       203: invokeinterface #323,  2          // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;)V
+       208: aload_0
+       209: invokevirtual #1021               // Method waitForRetry:()V
+       212: aload_0
+       213: invokestatic  #1045               // Method net/minecraft/server/players/OldUsersConverter.convertPlayers:(Lnet/minecraft/server/dedicated/DedicatedServer;)Z
+       216: istore        6
+       218: iinc          1, 1
+       221: goto          183
+       224: iload_2
+       225: ifne          247
+       228: iload_3
+       229: ifne          247
+       232: iload         4
+       234: ifne          247
+       237: iload         5
+       239: ifne          247
+       242: iload         6
+       244: ifeq          251
+       247: iconst_1
+       248: goto          252
+       251: iconst_0
+       252: ireturn
+
+  private void waitForRetry();
+    Code:
+         0: ldc2_w        #1049               // long 5000l
+         3: invokestatic  #1051               // Method java/lang/Thread.sleep:(J)V
+         6: goto          11
+         9: astore_1
+        10: return
+        11: return
+      Exception table:
+         from    to  target type
+             0     6     9   Class java/lang/InterruptedException
+
+  public long getMaxTickLength();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1055               // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxTickTime:J
+         7: lreturn
+
+  public int getMaxChainedNeighborUpdates();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #1059               // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxChainedNeighborUpdates:I
+         7: ireturn
+
+  public java.lang.String getPluginNames();
+    Code:
+         0: ldc_w         #1062               // String
+         3: areturn
+
+  public java.lang.String runCommand(java.lang.String);
+    Code:
+         0: aload_0
+         1: getfield      #46                 // Field rconConsoleSource:Lnet/minecraft/server/rcon/RconConsoleSource;
+         4: invokevirtual #1064               // Method net/minecraft/server/rcon/RconConsoleSource.prepareForCommand:()V
+         7: aload_0
+         8: aload_0
+         9: aload_1
+        10: invokedynamic #1067,  0           // InvokeDynamic #21:run:(Lnet/minecraft/server/dedicated/DedicatedServer;Ljava/lang/String;)Ljava/lang/Runnable;
+        15: invokevirtual #1071               // Method executeBlocking:(Ljava/lang/Runnable;)V
+        18: aload_0
+        19: getfield      #46                 // Field rconConsoleSource:Lnet/minecraft/server/rcon/RconConsoleSource;
+        22: invokevirtual #1075               // Method net/minecraft/server/rcon/RconConsoleSource.getCommandResponse:()Ljava/lang/String;
+        25: areturn
+
+  protected void stopServer();
+    Code:
+         0: aload_0
+         1: invokevirtual #620                // Method notificationManager:()Lnet/minecraft/server/notifications/NotificationManager;
+         4: invokevirtual #1078               // Method net/minecraft/server/notifications/NotificationManager.serverShuttingDown:()V
+         7: aload_0
+         8: invokespecial #1081               // Method net/minecraft/server/MinecraftServer.stopServer:()V
+        11: invokestatic  #1084               // Method net/minecraft/util/Util.shutdownExecutors:()V
+        14: return
+
+  public boolean isSingleplayerOwner(net.minecraft.server.players.NameAndId);
+    Code:
+         0: iconst_0
+         1: ireturn
+
+  public int getScaledTrackingDistance(int);
+    Code:
+         0: aload_0
+         1: invokevirtual #1087               // Method entityBroadcastRangePercentage:()I
+         4: iload_1
+         5: imul
+         6: bipush        100
+         8: idiv
+         9: ireturn
+
+  public int entityBroadcastRangePercentage();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #787                // Field net/minecraft/server/dedicated/DedicatedServerProperties.entityBroadcastRangePercentage:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #408                // class java/lang/Integer
+        13: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        16: ireturn
+
+  public void setEntityBroadcastRangePercentage(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #1089,  0           // InvokeDynamic #22:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public java.lang.String getLevelIdName();
+    Code:
+         0: aload_0
+         1: getfield      #1090               // Field storageSource:Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;
+         4: invokevirtual #1094               // Method net/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess.getLevelId:()Ljava/lang/String;
+         7: areturn
+
+  public boolean forceSynchronousWrites();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #772                // Field net/minecraft/server/dedicated/DedicatedServerProperties.syncChunkWrites:Z
+        10: ireturn
+
+  public net.minecraft.server.network.TextFilter createTextFilterForPlayer(net.minecraft.server.level.ServerPlayer);
+    Code:
+         0: aload_0
+         1: getfield      #62                 // Field serverTextFilter:Lnet/minecraft/server/network/ServerTextFilter;
+         4: ifnull        19
+         7: aload_0
+         8: getfield      #62                 // Field serverTextFilter:Lnet/minecraft/server/network/ServerTextFilter;
+        11: aload_1
+        12: invokevirtual #1099               // Method net/minecraft/server/level/ServerPlayer.getGameProfile:()Lcom/mojang/authlib/GameProfile;
+        15: invokevirtual #1105               // Method net/minecraft/server/network/ServerTextFilter.createContext:(Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/server/network/TextFilter;
+        18: areturn
+        19: getstatic     #1109               // Field net/minecraft/server/network/TextFilter.DUMMY:Lnet/minecraft/server/network/TextFilter;
+        22: areturn
+
+  public net.minecraft.world.level.GameType getForcedGameType();
+    Code:
+         0: aload_0
+         1: invokevirtual #1115               // Method forceGameMode:()Z
+         4: ifeq          19
+         7: aload_0
+         8: getfield      #354                // Field worldData:Lnet/minecraft/world/level/storage/WorldData;
+        11: invokeinterface #1118,  1         // InterfaceMethod net/minecraft/world/level/storage/WorldData.getGameType:()Lnet/minecraft/world/level/GameType;
+        16: goto          20
+        19: aconst_null
+        20: areturn
+
+  public boolean forceGameMode();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #1122               // Field net/minecraft/server/dedicated/DedicatedServerProperties.forceGameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #632                // class java/lang/Boolean
+        16: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        19: ireturn
+
+  public void setForceGameMode(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #1124,  0           // InvokeDynamic #23:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: aload_0
+        16: aload_0
+        17: invokevirtual #1125               // Method getForcedGameType:()Lnet/minecraft/world/level/GameType;
+        20: invokevirtual #1128               // Method enforceGameTypeForPlayers:(Lnet/minecraft/world/level/GameType;)I
+        23: pop
+        24: return
+
+  public net.minecraft.world.level.GameType gameMode();
+    Code:
+         0: aload_0
+         1: invokevirtual #718                // Method getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: getfield      #358                // Field net/minecraft/server/dedicated/DedicatedServerProperties.gameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         7: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        10: checkcast     #367                // class net/minecraft/world/level/GameType
+        13: areturn
+
+  public void setGameMode(net.minecraft.world.level.GameType);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: aload_1
+         6: invokedynamic #1132,  0           // InvokeDynamic #24:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Lnet/minecraft/world/level/GameType;)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: aload_0
+        16: getfield      #354                // Field worldData:Lnet/minecraft/world/level/storage/WorldData;
+        19: aload_0
+        20: invokevirtual #1135               // Method gameMode:()Lnet/minecraft/world/level/GameType;
+        23: invokeinterface #369,  2          // InterfaceMethod net/minecraft/world/level/storage/WorldData.setGameType:(Lnet/minecraft/world/level/GameType;)V
+        28: aload_0
+        29: aload_0
+        30: invokevirtual #1125               // Method getForcedGameType:()Lnet/minecraft/world/level/GameType;
+        33: invokevirtual #1128               // Method enforceGameTypeForPlayers:(Lnet/minecraft/world/level/GameType;)I
+        36: pop
+        37: return
+
+  public java.util.Optional<net.minecraft.server.MinecraftServer$ServerResourcePackInfo> getServerResourcePack();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #1137               // Field net/minecraft/server/dedicated/DedicatedServerProperties.serverResourcePackInfo:Ljava/util/Optional;
+        10: areturn
+
+  protected void endMetricsRecordingTick();
+    Code:
+         0: aload_0
+         1: invokespecial #1141               // Method net/minecraft/server/MinecraftServer.endMetricsRecordingTick:()V
+         4: aload_0
+         5: aload_0
+         6: invokevirtual #493                // Method debugSubscribers:()Lnet/minecraft/util/debug/ServerDebugSubscribers;
+         9: getstatic     #1144               // Field net/minecraft/util/debug/DebugSubscriptions.DEDICATED_SERVER_TICK_TIME:Lnet/minecraft/util/debug/DebugSubscription;
+        12: invokevirtual #1150               // Method net/minecraft/util/debug/ServerDebugSubscribers.hasAnySubscriberFor:(Lnet/minecraft/util/debug/DebugSubscription;)Z
+        15: putfield      #1156               // Field isTickTimeLoggingEnabled:Z
+        18: return
+
+  protected net.minecraft.util.debugchart.SampleLogger getTickTimeLogger();
+    Code:
+         0: aload_0
+         1: getfield      #506                // Field tickTimeLogger:Lnet/minecraft/util/debugchart/RemoteSampleLogger;
+         4: areturn
+
+  public boolean isTickTimeLoggingEnabled();
+    Code:
+         0: aload_0
+         1: getfield      #1156               // Field isTickTimeLoggingEnabled:Z
+         4: ireturn
+
+  public boolean acceptsTransfers();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #1159               // Field net/minecraft/server/dedicated/DedicatedServerProperties.acceptsTransfers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #632                // class java/lang/Boolean
+        16: invokevirtual #634                // Method java/lang/Boolean.booleanValue:()Z
+        19: ireturn
+
+  public void setAcceptsTransfers(boolean);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #1162,  0           // InvokeDynamic #25:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;Z)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  public net.minecraft.server.ServerLinks serverLinks();
+    Code:
+         0: aload_0
+         1: getfield      #74                 // Field serverLinks:Lnet/minecraft/server/ServerLinks;
+         4: areturn
+
+  public int pauseWhenEmptySeconds();
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         7: getfield      #1163               // Field net/minecraft/server/dedicated/DedicatedServerProperties.pauseWhenEmptySeconds:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+        10: invokevirtual #362                // Method net/minecraft/server/dedicated/Settings$MutableValue.get:()Ljava/lang/Object;
+        13: checkcast     #408                // class java/lang/Integer
+        16: invokevirtual #731                // Method java/lang/Integer.intValue:()I
+        19: ireturn
+
+  public void setPauseWhenEmptySeconds(int);
+    Code:
+         0: aload_0
+         1: getfield      #37                 // Field settings:Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+         4: aload_0
+         5: iload_1
+         6: invokedynamic #1166,  0           // InvokeDynamic #26:apply:(Lnet/minecraft/server/dedicated/DedicatedServer;I)Ljava/util/function/UnaryOperator;
+        11: invokevirtual #641                // Method net/minecraft/server/dedicated/DedicatedServerSettings.update:(Ljava/util/function/UnaryOperator;)Lnet/minecraft/server/dedicated/DedicatedServerSettings;
+        14: pop
+        15: return
+
+  private static net.minecraft.server.ServerLinks createServerLinks(net.minecraft.server.dedicated.DedicatedServerSettings);
+    Code:
+         0: aload_0
+         1: invokevirtual #50                 // Method net/minecraft/server/dedicated/DedicatedServerSettings.getProperties:()Lnet/minecraft/server/dedicated/DedicatedServerProperties;
+         4: invokestatic  #1167               // Method parseBugReportLink:(Lnet/minecraft/server/dedicated/DedicatedServerProperties;)Ljava/util/Optional;
+         7: astore_1
+         8: aload_1
+         9: invokedynamic #1171,  0           // InvokeDynamic #27:apply:()Ljava/util/function/Function;
+        14: invokevirtual #1174               // Method java/util/Optional.map:(Ljava/util/function/Function;)Ljava/util/Optional;
+        17: getstatic     #1180               // Field net/minecraft/server/ServerLinks.EMPTY:Lnet/minecraft/server/ServerLinks;
+        20: invokevirtual #1185               // Method java/util/Optional.orElse:(Ljava/lang/Object;)Ljava/lang/Object;
+        23: checkcast     #1181               // class net/minecraft/server/ServerLinks
+        26: areturn
+
+  private static java.util.Optional<java.net.URI> parseBugReportLink(net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_0
+         1: getfield      #1189               // Field net/minecraft/server/dedicated/DedicatedServerProperties.bugReportLink:Ljava/lang/String;
+         4: astore_1
+         5: aload_1
+         6: invokevirtual #380                // Method java/lang/String.isEmpty:()Z
+         9: ifeq          16
+        12: invokestatic  #1192               // Method java/util/Optional.empty:()Ljava/util/Optional;
+        15: areturn
+        16: aload_1
+        17: invokestatic  #1196               // Method net/minecraft/util/Util.parseAndValidateUntrustedUri:(Ljava/lang/String;)Ljava/net/URI;
+        20: invokestatic  #1200               // Method java/util/Optional.of:(Ljava/lang/Object;)Ljava/util/Optional;
+        23: areturn
+        24: astore_2
+        25: getstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+        28: ldc_w         #1205               // String Failed to parse bug link {}
+        31: aload_1
+        32: aload_2
+        33: invokeinterface #1207,  4         // InterfaceMethod org/slf4j/Logger.warn:(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V
+        38: invokestatic  #1192               // Method java/util/Optional.empty:()Ljava/util/Optional;
+        41: areturn
+      Exception table:
+         from    to  target type
+            16    23    24   Class java/lang/Exception
+
+  public java.util.Map<java.lang.String, java.lang.String> getCodeOfConducts();
+    Code:
+         0: aload_0
+         1: getfield      #88                 // Field codeOfConductTexts:Ljava/util/Map;
+         4: areturn
+
+  public net.minecraft.server.players.PlayerList getPlayerList();
+    Code:
+         0: aload_0
+         1: invokevirtual #681                // Method getPlayerList:()Lnet/minecraft/server/dedicated/DedicatedPlayerList;
+         4: areturn
+
+  private static net.minecraft.server.ServerLinks lambda$createServerLinks$0(java.net.URI);
+    Code:
+         0: new           #1181               // class net/minecraft/server/ServerLinks
+         3: dup
+         4: getstatic     #1209               // Field net/minecraft/server/ServerLinks$KnownLinkType.BUG_REPORT:Lnet/minecraft/server/ServerLinks$KnownLinkType;
+         7: aload_0
+         8: invokevirtual #1215               // Method net/minecraft/server/ServerLinks$KnownLinkType.create:(Ljava/net/URI;)Lnet/minecraft/server/ServerLinks$Entry;
+        11: invokestatic  #1218               // InterfaceMethod java/util/List.of:(Ljava/lang/Object;)Ljava/util/List;
+        14: invokespecial #1221               // Method net/minecraft/server/ServerLinks."<init>":(Ljava/util/List;)V
+        17: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setPauseWhenEmptySeconds$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #1163               // Field net/minecraft/server/dedicated/DedicatedServerProperties.pauseWhenEmptySeconds:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setAcceptsTransfers$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #1159               // Field net/minecraft/server/dedicated/DedicatedServerProperties.acceptsTransfers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setGameMode$0(net.minecraft.world.level.GameType, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #358                // Field net/minecraft/server/dedicated/DedicatedServerProperties.gameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: aload_1
+         9: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        12: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        15: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setForceGameMode$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #1122               // Field net/minecraft/server/dedicated/DedicatedServerProperties.forceGameMode:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setEntityBroadcastRangePercentage$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #787                // Field net/minecraft/server/dedicated/DedicatedServerProperties.entityBroadcastRangePercentage:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private void lambda$runCommand$0(java.lang.String);
+    Code:
+         0: aload_0
+         1: invokevirtual #871                // Method getCommands:()Lnet/minecraft/commands/Commands;
+         4: aload_0
+         5: getfield      #46                 // Field rconConsoleSource:Lnet/minecraft/server/rcon/RconConsoleSource;
+         8: invokevirtual #1231               // Method net/minecraft/server/rcon/RconConsoleSource.createCommandSourceStack:()Lnet/minecraft/commands/CommandSourceStack;
+        11: aload_1
+        12: invokevirtual #882                // Method net/minecraft/commands/Commands.performPrefixedCommand:(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V
+        15: return
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setMotd$0(java.lang.String, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #995                // Field net/minecraft/server/dedicated/DedicatedServerProperties.motd:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: aload_1
+         9: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        12: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        15: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setStatusHeartbeatInterval$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #987                // Field net/minecraft/server/dedicated/DedicatedServerProperties.statusHeartbeatInterval:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setPlayerIdleTimeout$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #983                // Field net/minecraft/server/dedicated/DedicatedServerProperties.playerIdleTimeout:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setOperatorUserPermissions$0(net.minecraft.server.permissions.LevelBasedPermissionSet, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #971                // Field net/minecraft/server/dedicated/DedicatedServerProperties.opPermissions:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: aload_1
+         9: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        12: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        15: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setHidesOnlinePlayers$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #967                // Field net/minecraft/server/dedicated/DedicatedServerProperties.hideOnlinePlayers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setRepliesToStatus$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #963                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enableStatus:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setSpawnProtectionRadius$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #902                // Field net/minecraft/server/dedicated/DedicatedServerProperties.spawnProtection:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setMaxPlayers$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #891                // Field net/minecraft/server/dedicated/DedicatedServerProperties.maxPlayers:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private static java.lang.Object lambda$fillServerSystemReport$1() throws java.lang.Exception;
+    Code:
+         0: ldc_w         #1235               // String Dedicated Server
+         3: areturn
+
+  private java.lang.Object lambda$fillServerSystemReport$0() throws java.lang.Exception;
+    Code:
+         0: aload_0
+         1: invokevirtual #1237               // Method getModdedStatus:()Lnet/minecraft/util/ModCheck;
+         4: invokevirtual #1241               // Method net/minecraft/util/ModCheck.fullDescription:()Ljava/lang/String;
+         7: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setSimulationDistance$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #740                // Field net/minecraft/server/dedicated/DedicatedServerProperties.simulationDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setViewDistance$0(int, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #728                // Field net/minecraft/server/dedicated/DedicatedServerProperties.viewDistance:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #407                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setDifficulty$0(net.minecraft.world.Difficulty, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #719                // Field net/minecraft/server/dedicated/DedicatedServerProperties.difficulty:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: aload_1
+         9: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        12: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        15: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setAllowFlight$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #708                // Field net/minecraft/server/dedicated/DedicatedServerProperties.allowFlight:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private static void lambda$sendLowDiskSpaceWarning$1(net.minecraft.server.level.ServerPlayer);
+    Code:
+         0: aload_0
+         1: getfield      #1246               // Field net/minecraft/server/level/ServerPlayer.connection:Lnet/minecraft/server/network/ServerGamePacketListenerImpl;
+         4: getstatic     #1250               // Field net/minecraft/network/protocol/game/ClientboundLowDiskSpaceWarningPacket.INSTANCE:Lnet/minecraft/network/protocol/game/ClientboundLowDiskSpaceWarningPacket;
+         7: invokevirtual #1256               // Method net/minecraft/server/network/ServerGamePacketListenerImpl.send:(Lnet/minecraft/network/protocol/Packet;)V
+        10: return
+
+  private static boolean lambda$sendLowDiskSpaceWarning$0(net.minecraft.server.permissions.Permission$HasCommandLevel, net.minecraft.server.level.ServerPlayer);
+    Code:
+         0: aload_1
+         1: invokevirtual #1262               // Method net/minecraft/server/level/ServerPlayer.permissions:()Lnet/minecraft/server/permissions/PermissionSet;
+         4: aload_0
+         5: invokeinterface #1266,  2         // InterfaceMethod net/minecraft/server/permissions/PermissionSet.hasPermission:(Lnet/minecraft/server/permissions/Permission;)Z
+        10: ireturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setUsingWhitelist$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #645                // Field net/minecraft/server/dedicated/DedicatedServerProperties.whiteList:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  private net.minecraft.server.dedicated.DedicatedServerProperties lambda$setEnforceWhitelist$0(boolean, net.minecraft.server.dedicated.DedicatedServerProperties);
+    Code:
+         0: aload_2
+         1: getfield      #629                // Field net/minecraft/server/dedicated/DedicatedServerProperties.enforceWhitelist:Lnet/minecraft/server/dedicated/Settings$MutableValue;
+         4: aload_0
+         5: invokevirtual #1224               // Method registryAccess:()Lnet/minecraft/core/RegistryAccess$Frozen;
+         8: iload_1
+         9: invokestatic  #775                // Method java/lang/Boolean.valueOf:(Z)Ljava/lang/Boolean;
+        12: invokevirtual #1228               // Method net/minecraft/server/dedicated/Settings$MutableValue.update:(Lnet/minecraft/core/RegistryAccess;Ljava/lang/Object;)Lnet/minecraft/server/dedicated/Settings;
+        15: checkcast     #79                 // class net/minecraft/server/dedicated/DedicatedServerProperties
+        18: areturn
+
+  static {};
+    Code:
+         0: invokestatic  #1272               // Method com/mojang/logging/LogUtils.getLogger:()Lorg/slf4j/Logger;
+         3: putstatic     #274                // Field LOGGER:Lorg/slf4j/Logger;
+         6: return
+}

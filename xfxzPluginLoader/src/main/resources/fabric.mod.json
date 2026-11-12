@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "xfxzpluginloader",
+  "version": "1.0.0",
+  "name": "XFXZ Plugin Loader",
+  "description": "让 .xfxzpe 文件被 Fabric 当作模组加载",
+  "authors": ["xiaofangii2"],
+  "license": "CC-BY-NC-SA-4.0",
+  "environment": "*",
+  "entrypoints": {
+    "preLaunch": [
+      "org.xiaofang_dev.xfxzpluginloader.XfxzPluginLoader"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

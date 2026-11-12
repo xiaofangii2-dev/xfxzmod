@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "icon": "icon.png",
+  "id": "xfxzlib",
+  "version": "1.0.0",
+  "name": "XFXZ Lib",
+  "description": "xfxzmod 的依赖库模组",
+  "authors": ["xiaofangii2"],
+  "license": "CC-BY-NC-SA-4.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.xiaofang_dev.xfxzlib.XfxzLib"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "breaks": {
+    "xfxzmod": "!1.0.0"
+  }
+}
