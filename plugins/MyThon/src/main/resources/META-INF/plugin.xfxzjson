@@ -1,0 +1,10 @@
+{
+  "id": "mython",
+  "version": "1.0.0",
+  "name": "MyThon",
+  "description": "XFXZ 插件",
+  "authors": ["xiaofangii2"],
+  "depends": {
+    "xfxzpluginloader": "1.0.0"
+  }
+}
