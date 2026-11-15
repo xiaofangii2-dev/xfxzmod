@@ -10,7 +10,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+            android:paddingTop="32dp">
+            
             <LinearLayout android:id="@+id/pageHome" android:layout_width="match_parent"
                 android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
                 <TextView android:id="@+id/tvVersion" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
@@ -19,6 +21,25 @@
                 <TextView android:id="@+id/tvTps" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
                 <TextView android:id="@+id/tvMspt" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
                 <TextView android:id="@+id/tvMemory" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+            </LinearLayout>
+
+            <!-- 玩家页面增加空状态 -->
+            <FrameLayout android:id="@+id/pagePlayers" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
+                <ListView android:id="@+id/lvPlayers" android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:divider="#A5D6A7" android:dividerHeight="1dp"/>
+                <TextView android:id="@+id/tvNoPlayers" android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:text="没有玩家" android:textSize="18sp" android:textColor="#666666"
+                    android:gravity="center" android:visibility="gone"/>
+            </FrameLayout>
+
+            <LinearLayout android:id="@+id/pagePlugin" android:layout_width="match_parent"
+                android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
+                <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp">
+                    <Button android:id="@+id/btnPluginAdd" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="下载插件" android:backgroundTint="#66BB6A" android:layout_alignParentStart="true"/>
+                </RelativeLayout>
+                <ListView android:id="@+id/lvPlugins" android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:divider="#A5D6A7" android:dividerHeight="1dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/pageRcon" android:layout_width="match_parent"
@@ -55,6 +76,8 @@
             android:id="@+id/bottomNav"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:itemIconTint="#43A047"
+            app:itemTextColor="#2E7D32"
             app:menu="@menu/bottom_nav" />
     </LinearLayout>
 </FrameLayout>
