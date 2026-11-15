@@ -1,0 +1,10 @@
+{
+  "id": "xfpanel",
+  "version": "1.0.0",
+  "name": "XfPanel",
+  "description": "XFXZ 服务器 Web 面板插件",
+  "authors": ["xiaofangii2"],
+  "depends": {
+    "xfxzpluginloader": "1.0.0"
+  }
+}

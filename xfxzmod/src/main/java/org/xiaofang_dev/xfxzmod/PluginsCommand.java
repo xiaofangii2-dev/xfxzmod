@@ -15,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -22,6 +23,10 @@ import java.util.zip.ZipFile;
 public class PluginsCommand {
     private static final Path PLUGINS_DIR = Paths.get(System.getProperty("user.dir")).resolve("config/xfxz/plugins");
     private static final String BASE_URL = "https://github.com/xiaofangii2-dev/xfxzmod/releases/download/plugins/";
+    private static final HttpClient CLIENT = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .connectTimeout(Duration.ofSeconds(15))
+            .build();
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("plugins")
@@ -78,11 +83,26 @@ public class PluginsCommand {
         String url = BASE_URL + id + ".xfxzpe";
         try {
             Files.createDirectories(PLUGINS_DIR);
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest req = HttpRequest.newBuilder(URI.create(url)).GET().build();
-            HttpResponse<byte[]> resp = client.send(req, HttpResponse.BodyHandlers.ofByteArray());
-            if (resp.statusCode() != 200) {
-                ctx.getSource().sendFailure(Component.literal("下载失败 HTTP " + resp.statusCode()));
+            HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+                    .GET()
+                    .header("User-Agent", "xfxzmod")
+                    .build();
+            HttpResponse<byte[]> resp = CLIENT.send(req, HttpResponse.BodyHandlers.ofByteArray());
+            int code = resp.statusCode();
+            if (code >= 300 && code < 400) {
+                String loc = resp.headers().firstValue("Location").orElse("");
+                if (!loc.isEmpty()) {
+                    HttpRequest req2 = HttpRequest.newBuilder(URI.create(loc))
+                            .GET()
+                            .header("User-Agent", "xfxzmod")
+                            .build();
+                    resp = CLIENT.send(req2, HttpResponse.BodyHandlers.ofByteArray());
+                    code = resp.statusCode();
+                }
+            }
+            if (code != 200) {
+                int finalCode = code;
+                ctx.getSource().sendFailure(Component.literal("下载失败 HTTP " + finalCode));
                 return 0;
             }
             Files.write(PLUGINS_DIR.resolve(id + ".xfxzpe"), resp.body());
@@ -108,7 +128,8 @@ public class PluginsCommand {
 
     private static String readName(Path xfxzpe) {
         try (ZipFile zip = new ZipFile(xfxzpe.toFile())) {
-            ZipEntry entry = zip.getEntry("META-INF/plugin.xfxzjson");
+            ZipEntry entry = zip.getEntry("assets/plugin.xfxzjson");
+            if (entry == null) entry = zip.getEntry("META-INF/plugin.xfxzjson");
             if (entry == null) return null;
             try (InputStream in = zip.getInputStream(entry)) {
                 String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);

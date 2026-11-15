@@ -1,92 +1,140 @@
 package org.xiaofang_dev.xfxzpluginloader;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.zip.*;
 
 public class XfxzPluginLoader implements PreLaunchEntrypoint {
     public static final Logger LOGGER = LoggerFactory.getLogger("xfxzpluginloader");
 
     @Override
     public void onPreLaunch() {
-        Path pluginsDir = Paths.get(System.getProperty("user.dir")).resolve("config/xfxz/plugins");
-        if (!Files.exists(pluginsDir)) {
-            LOGGER.info("插件目录不存在，跳过: {}", pluginsDir);
-            return;
-        }
+        reload();
+    }
+
+    public static boolean reload() {
+        Path root = Paths.get(System.getProperty("user.dir"));
+        Path pluginsDir = root.resolve("config/xfxz/plugins");
+        Path modsDir = root.resolve("mods");
+        if (!Files.exists(pluginsDir)) return false;
 
         Map<String, Path> latest = new LinkedHashMap<>();
-        Map<String, String> latestVersion = new LinkedHashMap<>();
-
+        Map<String, String> versions = new LinkedHashMap<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pluginsDir, "*.xfxzpe")) {
             for (Path p : stream) {
                 String fileName = p.getFileName().toString();
                 String id = fileName.substring(0, fileName.length() - ".xfxzpe".length());
-                String version = readVersion(p);
-                if (version == null) {
-                    LOGGER.warn("无法读取版本，跳过: {}", fileName);
-                    continue;
-                }
-                if (!latest.containsKey(id) || compareVersion(version, latestVersion.get(id)) > 0) {
+                String version = readMetaField(p, "version");
+                if (version == null) continue;
+                if (!latest.containsKey(id) || compare(version, versions.get(id)) > 0) {
                     latest.put(id, p);
-                    latestVersion.put(id, version);
+                    versions.put(id, version);
                 }
             }
         } catch (IOException e) {
             LOGGER.error("扫描插件目录失败", e);
-            return;
+            return false;
+        }
+        if (latest.isEmpty()) return false;
+
+        try {
+            Files.createDirectories(modsDir);
+        } catch (IOException e) {
+            LOGGER.error("创建 mods 目录失败", e);
+            return false;
         }
 
-        if (latest.isEmpty()) {
-            LOGGER.info("没有找到 .xfxzpe 插件");
-            return;
+        Path out = modsDir.resolve("xfxzplugins.jar");
+        try {
+            buildBundle(latest, out);
+            LOGGER.info("已生成插件包: {}", out.getFileName());
+            return true;
+        } catch (IOException ex) {
+            LOGGER.error("生成插件包失败", ex);
+            return false;
         }
-
-        String existing = System.getProperty("fabric.addMods", "");
-        StringBuilder addMods = new StringBuilder(existing);
-        for (Path p : latest.values()) {
-            if (addMods.length() > 0) addMods.append(java.io.File.pathSeparator);
-            addMods.append(p.toAbsolutePath().toString());
-        }
-        System.setProperty("fabric.addMods", addMods.toString());
-        LOGGER.info("已注册 {} 个插件到 fabric.addMods", latest.size());
     }
 
-    private static String readVersion(Path xfxzpe) {
-        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(xfxzpe.toFile())) {
-            java.util.zip.ZipEntry entry = zip.getEntry("META-INF/plugin.xfxzjson");
-            if (entry == null) return null;
-            try (java.io.InputStream in = zip.getInputStream(entry)) {
-                String content = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-                int idx = content.indexOf("\"version\"");
-                if (idx < 0) return null;
-                int colon = content.indexOf(':', idx);
-                int q1 = content.indexOf('"', colon);
-                int q2 = content.indexOf('"', q1 + 1);
-                return content.substring(q1 + 1, q2);
+    private static void buildBundle(Map<String, Path> plugins, Path out) throws IOException {
+        InputStream shell = XfxzPluginLoader.class.getResourceAsStream("/plugin.jar");
+        if (shell == null) {
+            LOGGER.error("找不到 plugin.jar 资源");
+            return;
+        }
+
+        try (ZipInputStream zin = new ZipInputStream(shell);
+             ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(out))) {
+            ZipEntry entry;
+            while ((entry = zin.getNextEntry()) != null) {
+                if (entry.getName().equals("fabric.mod.json")) {
+                    String json = new String(zin.readAllBytes(), StandardCharsets.UTF_8);
+                    JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+                    JsonArray jars = new JsonArray();
+                    for (String id : plugins.keySet()) {
+                        JsonObject jarObj = new JsonObject();
+                        jarObj.addProperty("file", "META-INF/jars/" + id + ".jar");
+                        jars.add(jarObj);
+                    }
+                    obj.add("jars", jars);
+                    zout.putNextEntry(new ZipEntry("fabric.mod.json"));
+                    zout.write(obj.toString().getBytes(StandardCharsets.UTF_8));
+                    zout.closeEntry();
+                    continue;
+                }
+                zout.putNextEntry(new ZipEntry(entry.getName()));
+                if (!entry.isDirectory()) zin.transferTo(zout);
+                zout.closeEntry();
             }
-        } catch (IOException e) {
+
+            for (Map.Entry<String, Path> e : plugins.entrySet()) {
+                ZipEntry nested = new ZipEntry("META-INF/jars/" + e.getKey() + ".jar");
+                zout.putNextEntry(nested);
+                zout.write(Files.readAllBytes(e.getValue()));
+                zout.closeEntry();
+            }
+        }
+    }
+
+    private static JsonObject readMeta(Path xfxzpe) {
+        try (ZipFile zip = new ZipFile(xfxzpe.toFile())) {
+            ZipEntry entry = zip.getEntry("assets/plugin.xfxzjson");
+            if (entry == null) entry = zip.getEntry("META-INF/plugin.xfxzjson");
+            if (entry == null) return null;
+            try (InputStream in = zip.getInputStream(entry)) {
+                return JsonParser.parseString(new String(in.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+            }
+        } catch (Exception e) {
             return null;
         }
     }
 
-    private static int compareVersion(String a, String b) {
+    private static String readMetaField(Path xfxzpe, String field) {
+        JsonObject meta = readMeta(xfxzpe);
+        return meta != null && meta.has(field) ? meta.get(field).getAsString() : null;
+    }
+
+    private static int compare(String a, String b) {
         String[] pa = a.split("\\.");
         String[] pb = b.split("\\.");
         int len = Math.max(pa.length, pb.length);
         for (int i = 0; i < len; i++) {
-            int na = i < pa.length ? parseIntSafe(pa[i]) : 0;
-            int nb = i < pb.length ? parseIntSafe(pb[i]) : 0;
+            int na = i < pa.length ? parseInt(pa[i]) : 0;
+            int nb = i < pb.length ? parseInt(pb[i]) : 0;
             if (na != nb) return Integer.compare(na, nb);
         }
         return 0;
     }
 
-    private static int parseIntSafe(String s) {
-        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return 0; }
+    private static int parseInt(String s) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
     }
 }

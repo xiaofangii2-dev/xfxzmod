@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.XfxzApp" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:statusBarColor">#A5D6A7</item>
+        <item name="android:windowBackground">#C8E6C9</item>
+        <item name="colorPrimary">#66BB6A</item>
+        <item name="colorPrimaryVariant">#43A047</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+    </style>
+</resources>

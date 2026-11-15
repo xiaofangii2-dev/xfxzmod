@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import org.xiaofang_dev.xfxzpluginloader.XfxzPluginLoader;
 
 import java.util.Map;
 
@@ -13,6 +14,7 @@ public class XfxzCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("xfxz")
                 .then(Commands.literal("version").executes(XfxzCommand::version))
+                .then(Commands.literal("reload").executes(XfxzCommand::reload))
                 .then(Commands.literal("op")
                         .then(Commands.literal("add")
                                 .then(Commands.argument("player", StringArgumentType.word())
@@ -34,6 +36,16 @@ public class XfxzCommand {
     private static int version(CommandContext<CommandSourceStack> ctx) {
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "xfxzmod: " + XfxzMod.MOD_VERSION + "\nxfxzlib: " + XfxzLibVersion.VERSION), false);
+        return 1;
+    }
+
+    private static int reload(CommandContext<CommandSourceStack> ctx) {
+        WorldConfig.reload();
+        AiConfig.init();
+        OpConfig.load();
+        boolean ok = XfxzPluginLoader.reload();
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                ok ? "配置已重载，插件包已重新生成，重启后生效" : "配置已重载，没有插件需要打包"), false);
         return 1;
     }
 

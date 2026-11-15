@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#C8E6C9">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+            <LinearLayout android:id="@+id/pageHome" android:layout_width="match_parent"
+                android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+                <TextView android:id="@+id/tvVersion" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+                <TextView android:id="@+id/tvPlayers" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+                <TextView android:id="@+id/tvUptime" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+                <TextView android:id="@+id/tvTps" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+                <TextView android:id="@+id/tvMspt" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+                <TextView android:id="@+id/tvMemory" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/pageRcon" android:layout_width="match_parent"
+                android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:visibility="gone">
+                <EditText android:id="@+id/etRcon" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:hint="输入命令"/>
+                <Button android:id="@+id/btnRconSend" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="发送"/>
+                <TextView android:id="@+id/tvRconResult" android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:textSize="14sp" android:padding="8dp"/>
+            </LinearLayout>
+
+            <ScrollView android:id="@+id/pageSettings" android:layout_width="match_parent"
+                android:layout_height="match_parent" android:visibility="gone">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp">
+                    <TextView android:id="@+id/btnGithub" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:text="关于" android:textSize="16sp"
+                        android:padding="16dp" android:background="?android:attr/selectableItemBackground"/>
+                    <TextView android:id="@+id/btnVersion" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:text="版本" android:textSize="16sp"
+                        android:padding="16dp" android:background="?android:attr/selectableItemBackground"/>
+                    <TextView android:id="@+id/btnDevMode" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:text="关闭开发者模式" android:textSize="16sp"
+                        android:padding="16dp" android:visibility="gone" android:background="?android:attr/selectableItemBackground"/>
+                    <TextView android:id="@+id/btnWatchdogEntry" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:text="看门狗" android:textSize="16sp"
+                        android:padding="16dp" android:visibility="gone" android:background="?android:attr/selectableItemBackground"/>
+                </LinearLayout>
+            </ScrollView>
+        </FrameLayout>
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu="@menu/bottom_nav" />
+    </LinearLayout>
+</FrameLayout>

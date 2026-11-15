@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "xfpanel",
+  "version": "${version}",
+  "name": "XfPanel",
+  "description": "XFXZ 服务器 Web 面板插件",
+  "authors": ["xiaofangii2"],
+  "license": "CC-BY-NC-SA-4.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.xiaofang_dev.xfpanel.XfPanel"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "xfxzpluginloader": "1.0.0"
+  }
+}

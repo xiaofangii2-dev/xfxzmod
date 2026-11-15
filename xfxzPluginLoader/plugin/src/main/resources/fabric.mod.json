@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "xfxzpluginjar",
+  "version": "1.0.0",
+  "name": "XFXZ Plugin Jar",
+  "description": "插件包装壳",
+  "authors": ["xiaofangii2"],
+  "license": "CC-BY-NC-SA-4.0",
+  "environment": "*",
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "xfxzpluginloader": "1.0.0"
+  }
+}
