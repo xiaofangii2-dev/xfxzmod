@@ -1,186 +1,124 @@
 # XFXZ Mod
 
-一个面向 Minecraft Fabric 26.3 服务端的综合模组，包含维度传送、AI 聊天、插件加载、OP 管理、控制台增强和 Web 面板。项目由主模组、依赖库、插件加载器、示例插件、Web 面板插件、Android 客户端和命令行工具组成。
+一个面向 Minecraft Fabric 26.3 服务端的综合管理模组。本来只是某人想简单做个传送指令，结果越写越多，最后硬生生搓出了一个包含维度管理、AI 对话、原生控制台增强、动态插件系统以及跨平台远程控制面板的完整生态，甚至还配了个 Android 控制端。用起来大概比你直接去后台敲指令要舒服那么一点。
+
+---
 
 ## 项目结构
 
-xfxzmod：主模组，提供 /xftp、/ai、/xfxz 命令和控制台增强。
+本项目采用了标准的 Gradle 多模块构建，主要为了让你在找文件时不会迷路：
 
-xfxzlib：依赖库模组。
+- **xfxzmod**：主模组，负责门面，提供核心指令、控制台增强、AI 聊天、维度传送。
+- **xfxzlib**：依赖库模组，打杂的。
+- **xfxzPluginLoader**：插件加载器，负责解析、打包并让 Fabric 加载 `.xfxzpe` 插件。
+- **plugins/MyThon**：内置的示例插件，用来证明插件系统没白写。
+- **plugins/XfPanel**：Web 面板插件，提供 HTTP API 和 WebSocket 服务，专门伺候 Android 客户端。
+- **xfxzapp**：Android 控制端，支持状态查看、RCON、玩家管理和插件管理。
+- **xfxzcli**：用 Go 写的命令行构建工具，用来拯救每天对着长串 Gradle 命令疯狂复制粘贴的双手。
 
-xfxzPluginLoader：插件加载器，把 .xfxzpe 插件打包成 Fabric 可加载的 jar。
+---
 
-plugins/MyThon：示例插件。
+## 服务端命令说明
 
-plugins/XfPanel：Web 面板插件，提供 HTTP API 和 WebSocket 推送。
+### 维度传送 (`/xftp`)
+将一个或多个玩家传送到指定维度。这大概是整个项目里最正常的指令了。
+- **格式**：`/xftp <玩家> <维度ID>`
+- **配置文件**：坐标从 `config/xfxz/world_config/<命名空间>/<维度名>.cfg` 读取。
+- **默认生成**：首次启动自动生成 `bw2`、`rural`、`main` 三个默认维度，坐标均为 `0 64 0`。
+- **智能补全**：带冒号的格式（如 `xfxz:bw2`）直接输入就行，不用去按那个反人类的单引号，支持 Tab 补全。
 
-xfxzapp：Android 客户端，连接 XfPanel 查看状态和执行 RCON 命令。
+### AI 聊天接入 (`/ai`)
+觉得一个人玩服务器太孤独？现在可以在游戏里直接跟 AI 唠嗑了。
+- **格式**：`/ai chat true|false`
+- **拦截机制**：开启后，你发的聊天内容会被悄悄拦截并转发给 AI，回复以系统消息返回。每个玩家的开关独立，不会干扰别人。
+- **接口配置**：兼容 OpenAI 格式。API URL、Key 和模型名通过 `config/xfxz/ai/ai.cfg` 配置，填上你的本地小模型或者云端大模型就能跑。
 
-xfxzcli：Go 编写的命令行工具，用于构建项目。
+### 主管理命令 (`/xfxz`)
+服务器综合管理指令，一站式解决各种疑难杂症。
+- `/xfxz version`：输出主模组和依赖库的版本号。可以拿来确认自己到底装没装对。
+- `/xfxz reload`：重新读取维度、AI 和 OP 配置，并重新扫描插件目录生成插件包。配置即时生效，至于插件？重启服务器才会理你。
+- `/xfxz op add|rm|ls <玩家>`：管理模组 OP 权限。新来的玩家默认是卑微的普通人。
+- `/xfxz plugins list`：列出已安装插件，直接读取元数据里的 `name` 字段展示。
+- `/xfxz plugins add <ID>`：从 GitHub 下载 `<ID>.xfxzpe` 到本地，适合手懒的时候用。
+- `/xfxz plugins rm <ID>`：删除指定的插件文件，眼不见为净。
 
-## 命令
-
-### /xftp
-
-传送玩家到指定维度。
-
-/xftp <玩家> <维度ID>
-
-把目标玩家传送到维度配置文件里的坐标。维度参数支持 Tab 补全，带冒号的 namespace:id 格式可直接输入，不需要加引号。
-
-维度配置放在 config/xfxz/world_config/<命名空间>/<维度名>.cfg，格式为 namespace、id、coordinates 三个字段，coordinates 是 x y z 三个数字。
-
-首次启动生成 xfxz 命名空间下的 bw2、rural、main 三个默认维度，坐标均为 0 64 0。配置文件已存在时不覆盖。
-
-### /ai
-
-AI 聊天开关。
-
-/ai chat true
-
-开启聊天模式，玩家在聊天栏发送的每句话转发给配置的 AI 服务，回复以系统消息返回给该玩家。每个玩家的开关独立，按 UUID 记录。
-
-/ai chat false
-
-关闭聊天模式。
-
-AI 配置放在 config/xfxz/ai/ai.cfg，字段为 api_url、api_key、model，兼容 OpenAI 的 Chat Completions 接口。请求体包含 model 和 messages 数组，响应从 choices[0].message.content 取回复文本。api_key 为空时不发送 Authorization 头。首次启动自动创建，三个字段默认为空。
-
-### /xfxz
-
-主命令，包含版本、重载、OP 管理和插件管理。
-
-/xfxz version
-
-输出 xfxzmod 和 xfxzlib 的版本号。
-
-/xfxz reload
-
-重新读取维度配置、AI 配置和 OP 配置，并重新扫描 config/xfxz/plugins/ 生成插件包 mods/xfxzplugins.jar。配置即时生效，插件本身需要重启服务器才加载。
-
-/xfxz op add <玩家>
-
-把指定玩家设为 OP。
-
-/xfxz op rm <玩家>
-
-取消指定玩家的 OP。
-
-/xfxz op ls
-
-列出所有玩家的 OP 状态。
-
-/xfxz plugins list
-
-列出 config/xfxz/plugins/ 下所有插件的 name 字段。
-
-/xfxz plugins add <ID>
-
-从 GitHub releases 的 plugins 路径下载 <ID>.xfxzpe 到 config/xfxz/plugins/。下载后需要 /xfxz reload 重新生成插件包并重启服务器。
-
-/xfxz plugins rm <ID>
-
-删除 config/xfxz/plugins/ 下对应的 <ID>.xfxzpe。
-
-### OP 系统
-
-config/xfxz/user/op.ini 记录玩家 OP 状态，每个玩家一个 section，包含 op、id、uuid 三个字段。uuid 是 24 位小写字母数字，格式为 xxxx-xxxx-xxxx-xxxx-xxxx-xxxx，首次登记时随机生成。
-
-玩家首次进服时自动登记，op 默认为 false。管理员用 /xfxz op add <玩家> 设为 OP，/xfxz op rm 取消。
-
-只有 op 为 true 的玩家能执行 /xfxz plugins 下的 list、add、rm 三个子命令。
+### OP 权限管理系统
+- **自动登记**：任何玩家首次进服时，系统都会在 `config/xfxz/user/op.ini` 里给他建个档案，并随机生成一个 24 位的专属 UUID。仪式感拉满。
+- **权限控制**：只有被管理员手动赐予 OP 身份的玩家，才能执行 `plugins` 相关的子命令，防止有人乱动你的插件库。
 
 ### 控制台增强
+受够了原版控制台打字打到一半被后台报错顶飞的痛苦？现在接入了 `TerminalConsoleAppender` 和 `JLine`。我们用 Mixin 强行拦下了原版线程，给你焊死了一个固定在底部的 `>` 提示符。哪怕后台日志像瀑布一样刷屏，你敲了一半的命令也稳如泰山。
 
-服务端控制台使用 TerminalConsoleAppender 和 JLine，提供固定在底部的输入行，提示符为 >，日志输出不会打断正在输入的命令。不带命令补全。
+---
 
-实现方式是通过 Mixin 注入 DedicatedServer 的 initServer 方法，在 RETURN 处拦截原版控制台线程的 Thread.start() 调用，替换为自定义的 XfxzConsole。原版线程不启动，由 XfxzConsole 接管控制台输入，命令通过 server.handleConsoleInput 交给原版分发器执行。
+## 插件系统
 
-### 插件系统
+- **插件格式**：`.xfxzpe` 披着个陌生的外衣，本质依然是个带有特殊元数据 (`assets/plugin.xfxzjson`) 的 Fabric 模组 jar。
+- **动态打包注入**：加载器会在 `preLaunch` 阶段把 `config/xfxz/plugins/` 里选中的插件全扒拉出来，按最高版本打包进 `mods/xfxzplugins.jar`，再借壳上市让 Fabric 加载。不用手动复制改名。
+- **依赖声明**：想混进这个圈子，插件内部必须乖乖声明对 `xfxzpluginloader` 的依赖。
+- **插件商店与代下载**：App 端接入了商店列表，直接展示远端的最新插件。看中哪个点一下，服务端会自动替你跑腿，把文件拉取并保存到插件目录，省去来回倒腾文件的功夫。
 
-.xfxzpe 是带 plugin.xfxzjson 元数据的 Fabric 模组 jar。plugin.xfxzjson 放在 assets/ 下，和 fabric.mod.json 并存。必填字段为 id、version、name、authors、description、depends，其中 depends 里必须包含 xfxzpluginloader 的版本约束。其他字段可选。
+---
 
-xfxzPluginLoader 在 preLaunch 阶段扫描 config/xfxz/plugins/，按 id 分组，同 ID 多版本时取版本号最大的一个，把所有选中的插件打包进 mods/xfxzplugins.jar 的 META-INF/jars/ 下，外层 fabric.mod.json 的 jars 字段列出所有嵌套 jar。Fabric 加载外层 jar 时会把嵌套 jar 当插件加载。
+## Web 面板 XfPanel
 
-### Web 面板 XfPanel
+基于 Jetty 11 构建。服务端启动后，它会默默在后台监听 `18923` 端口，首次运行还会生成一个 Token 塞进 `config/xfxz/panel.cfg`，没这串口令谁也别想进。
+- `GET /api/status`：返回服务器实时状态，包括 TPS、内存和在线名单。
+- `POST /api/rcon`：远程下旨，执行指令并原封不动地把控制台文本输出截获返回，连个 JSON 外壳都不留。
+- `GET /api/plugins`：摸清家底，获取已安装插件。
+- `POST /api/plugins/download`：服务端化身下载器，支持自动跟随 GitHub 的 302 重定向，无感拉取插件。
+- `POST /api/plugins/delete`：一键清理不想要的插件，匹配逻辑连大小写都防住了。
+- `/ws`：WebSocket 端点，每 5 秒主动推送一次数据，加入断线自动清理机制，不用担心内存泄漏。
 
-服务端启动后在 18923 端口启动 HTTP 和 WebSocket 服务。token 首次启动生成，写在 config/xfxz/panel.cfg 的 token 字段。
+---
 
-GET /api/status
+## Android 客户端 xfxzapp
 
-返回服务器状态 JSON，包含 version、players、maxPlayers、uptimeMs、tps、mspt、memoryUsed、memoryMax。需要请求头 Authorization: Bearer <token>。
+用 Java 硬核开发的移动端控制台，让你躺在被窝里也能管服。这版 UI 经过了大幅调整，不仅适配了状态栏，交互也全面向现代 App 靠拢。
+- **OOBE 引导与本地记忆**：首次启动一步步教你授权，填好 IP 和 Token 后直接存本地私有目录。下次打开直接跳过引导页，秒进主界面。
+- **实时状态**：主页数据通过 WebSocket 实时跳动，沉浸式体验，时刻掌握服务器生死。
+- **玩家管理面板**：现在有了独立的玩家 Tab。如果你打开发现空荡荡的，说明服里没人。有人时，每个玩家右侧都有三个点，点开就能直接“踢出”、“给 OP”或“清除 OP”，再也不用去 RCON 手敲名字。
+- **插件管理面板**：可以查看已装的插件列表，如果看着不顺眼，点右侧菜单即可卸载。左上角的按钮还能直接唤起插件商店列表，挑一个点进去，服务端就会帮你下好。
+- **RCON 控制台**：内置纯净版输入框，敲入指令直接看结果，纯文本回显，干净利落。
+- **看门狗监控**：怕服务器卡成 PPT？在设置里开启后，一旦 TPS 或 MSPT 拉胯，App 立刻弹窗并往通知栏丢警告（带 60 秒防抖，不至于把你烦死）。开发者模式也换成了点版本号触发，更加优雅。
 
-POST /api/rcon
+---
 
-发送命令到服务器，body 为命令原文。返回 JSON 包含 ok、output (命令执行输出) 或 error。需要请求头 Authorization: Bearer <token>。
+## 构建与开发
 
-/ws
+### 环境要求
+- JDK 25（别用低版本，不然编译报错别怪没提醒）
+- Android SDK（编译客户端需要）
 
-WebSocket 端点，每 5 秒推送一次和 /api/status 相同的 JSON。
+### 编译服务端
+在项目根目录执行：
+`./gradlew build`
+产物在 `build/libs/` 下，主模组的 jar 已经把依赖库和加载器像俄罗斯套娃一样打包进去了，直接丢进 `mods` 就能跑。
 
-### Android 客户端 xfxzapp
+### 编译 Android 客户端
+`cd xfxzapp`
+`./gradlew assembleDebug`
+Termux 用户请注意，记得把 `android.aapt2FromMavenOverride` 指向系统 aapt2，不然它会给你表演一个架构错误原地崩溃。
 
-首次打开进入 OOBE 向导，请求通知权限、Shizuku 权限和文件访问权限。授权完成后进入连接页，填写服务器地址和 token。连接成功后会保存到本地 (Android/data/org.xiaofang_dev.xfxzapp/files/xfxz.properties)，下次打开自动跳过 OOBE 直接进入主页面。
-
-主页面底部三个 Tab：主页显示服务器状态卡片，RCON 页发送命令并显示服务端纯文本输出，设置页包含关于、版本、开发者模式和看门狗设置。
-
-开发者模式：在设置 -> 版本中，连续点击 APP 版本 6 次开启。开启后设置页出现“看门狗”入口。看门狗支持 TPS 和 MSPT 两种监控，可分别设置开关和阈值，触发时 APP 内弹窗并在通知栏发送通知。
-
-服务器地址填 127.0.0.1:18923（本地）或服务器 IP 加端口，token 填 config/xfxz/panel.cfg 里的值。
-
-### 命令行工具 xfxzcli
-
-Go 编写的构建工具，放在 xfxzcli/ 下。
-
-./xfxzcli version
-
-输出 xfxzcli 版本号。
-
-./xfxzcli build
-
-依次构建 xfxzlib、xfxzPluginLoader、MyThon、XfPanel、xfxzmod。
-
-./xfxzcli build lib
-
-只构建 xfxzlib。可选目标为 lib、loader、mython、panel、mod、all。
-
-## 构建
-
-需要 JDK 25。在项目根目录执行：
-
-./gradlew build
-
-产物在各自子项目的 build/libs/ 下。xfxzmod 的 jar 里嵌套了 xfxzlib 和 xfxzpluginloader。
-
-Android 客户端在 xfxzapp/ 下，用 Gradle 编 APK：
-
-cd xfxzapp
-./gradlew assembleDebug
-
-Termux 里编 Android 项目需要设置 android.aapt2FromMavenOverride 指向系统 aapt2。
+---
 
 ## 运行环境
 
-Minecraft 26.3
+- Minecraft 26.3
+- Fabric Loader 0.19.5 及以上
+- Fabric API
+- Java 25
+- Android 客户端需要 Android 8.0 及以上
 
-Fabric Loader 0.19.5 及以上
+---
 
-Fabric API
+## 许可证与作者
 
-Java 25
-
-Android 客户端需要 Android 8.0 及以上
-
-## 许可证
-
-CC BY-NC-SA 4.0。允许使用、修改、分发，不得用于商业用途，修改后的版本必须以相同协议开源。详见 LICENSE。
-
-## 作者
-
-xiaofangii2
+- **许可证**：CC BY-NC-SA 4.0。随便用、随便改、随便发，但如果拿它去赚钱，或者改了之后闭源，作者的律师函可能不会到，但良心肯定会痛。详见 LICENSE。
+- **作者**：xiaofangii2
 
 ## 引用
 
 ~~https://github.com/xiaofang/MyThon~~
 
-本项目作者本人的项目，无需引用。
+哎，不对，这好像是我的项目
