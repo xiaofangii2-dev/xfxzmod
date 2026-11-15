@@ -13,20 +13,27 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
-    private final OkHttpClient client = new OkHttpClient.Builder().readTimeout(0, TimeUnit.MILLISECONDS).build();
+    private final OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final String baseUrl;
     private final String token;
-    private WebSocket ws;
+    private final int intervalSec;
+    private boolean polling = false;
+    private Runnable pollTask;
 
     public interface StatusCallback { void onStatus(JsonObject json); }
     public interface ErrorCallback { void onError(String msg); }
     public interface RconCallback { void onResult(JsonObject json); void onError(String msg); }
     public interface PluginsCallback { void onList(List<Plugin> plugins); void onError(String msg); }
 
-    public ApiClient(String baseUrl, String token) {
+    public ApiClient(String baseUrl, String token, int intervalSec) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.token = token;
+        this.intervalSec = intervalSec;
+        this.client = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build();
     }
 
     public void fetchStatus(StatusCallback ok, ErrorCallback err) {
@@ -43,16 +50,26 @@ public class ApiClient {
         });
     }
 
-    public void connectWebSocket(StatusCallback ok, ErrorCallback err) {
-        String wsUrl = baseUrl.replaceFirst("^http", "ws") + "/ws";
-        ws = client.newWebSocket(new Request.Builder().url(wsUrl).build(), new WebSocketListener() {
-            @Override public void onMessage(WebSocket webSocket, String text) {
-                try {
-                    JsonObject json = JsonParser.parseString(text).getAsJsonObject();
-                    main.post(() -> ok.onStatus(json));
-                } catch (Exception ignored) {}
+    // 使用轮询代替 WebSocket，这样可以动态修改刷新时间
+    public void startPolling(StatusCallback ok, ErrorCallback err) {
+        polling = true;
+        doPoll(ok, err);
+    }
+
+    private void doPoll(StatusCallback ok, ErrorCallback err) {
+        if (!polling) return;
+        fetchStatus(json -> {
+            ok.onStatus(json);
+            if (polling) {
+                pollTask = () -> doPoll(ok, err);
+                main.postDelayed(pollTask, intervalSec * 1000L);
             }
-            @Override public void onFailure(WebSocket webSocket, Throwable t, Response response) { main.post(() -> err.onError(t.getMessage())); }
+        }, msg -> {
+            err.onError(msg);
+            if (polling) {
+                pollTask = () -> doPoll(ok, err);
+                main.postDelayed(pollTask, intervalSec * 1000L);
+            }
         });
     }
 
@@ -94,5 +111,8 @@ public class ApiClient {
         });
     }
 
-    public void close() { if (ws != null) ws.close(1000, "bye"); }
+    public void close() {
+        polling = false;
+        if (pollTask != null) main.removeCallbacks(pollTask);
+    }
 }

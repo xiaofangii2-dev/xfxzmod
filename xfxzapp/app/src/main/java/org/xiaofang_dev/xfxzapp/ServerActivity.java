@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -18,6 +19,7 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ServerActivity extends AppCompatActivity {
     private static final String CHANNEL_ID = "watchdog";
@@ -26,12 +28,15 @@ public class ServerActivity extends AppCompatActivity {
 
     private ApiClient api;
     private boolean authorized = false;
+    private boolean isEn = false;
+    
     private TextView tvVersion, tvPlayers, tvUptime, tvTps, tvMspt, tvMemory;
+    private TextView tvTitleTps, tvTitleMspt, tvTitlePlayers, tvTitleVersion, tvTitleUptime, tvTitleMemory;
     private EditText etRcon;
     private TextView tvRconResult;
-    private LinearLayout pageHome, pageRcon, pagePlugin;
+    private LinearLayout pageRcon, pagePlugin;
     private FrameLayout pagePlayers;
-    private ScrollView pageSettings;
+    private ScrollView pageHome, pageSettings;
     private long lastTpsNotify = 0;
     private long lastMsptNotify = 0;
     private String ip, token;
@@ -48,10 +53,13 @@ public class ServerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        isEn = LangManager.isEn(this);
         setContentView(R.layout.activity_server);
 
         ip = getIntent().getStringExtra("ip");
+        if (ip == null) ip = Prefs.getIp(this);
         token = getIntent().getStringExtra("token");
+        if (token == null) token = Prefs.getToken(this);
         if (ip == null || token == null) { finish(); return; }
 
         createChannel();
@@ -64,12 +72,20 @@ public class ServerActivity extends AppCompatActivity {
         tvMemory = findViewById(R.id.tvMemory);
         etRcon = findViewById(R.id.etRcon);
         tvRconResult = findViewById(R.id.tvRconResult);
+        
         pageHome = findViewById(R.id.pageHome);
         pageRcon = findViewById(R.id.pageRcon);
         pagePlugin = findViewById(R.id.pagePlugin);
         pagePlayers = findViewById(R.id.pagePlayers);
         pageSettings = findViewById(R.id.pageSettings);
         
+        tvTitleTps = findViewById(R.id.tvTitleTps);
+        tvTitleMspt = findViewById(R.id.tvTitleMspt);
+        tvTitlePlayers = findViewById(R.id.tvTitlePlayers);
+        tvTitleVersion = findViewById(R.id.tvTitleVersion);
+        tvTitleUptime = findViewById(R.id.tvTitleUptime);
+        tvTitleMemory = findViewById(R.id.tvTitleMemory);
+
         lvPlugins = findViewById(R.id.lvPlugins);
         pluginAdapter = new PluginAdapter();
         lvPlugins.setAdapter(pluginAdapter);
@@ -78,6 +94,54 @@ public class ServerActivity extends AppCompatActivity {
         playerAdapter = new PlayerAdapter();
         lvPlayers.setAdapter(playerAdapter);
         tvNoPlayers = findViewById(R.id.tvNoPlayers);
+
+        if (isEn) {
+            tvTitleTps.setText("TPS");
+            tvTitleMspt.setText("MSPT");
+            tvTitlePlayers.setText("Players");
+            tvTitleVersion.setText("Version");
+            tvTitleUptime.setText("Uptime");
+            tvTitleMemory.setText("Memory");
+            tvNoPlayers.setText("No Players");
+            etRcon.setHint("Enter command");
+            ((Button)findViewById(R.id.btnRconSend)).setText("Send");
+            ((Button)findViewById(R.id.btnPluginAdd)).setText("Download");
+            ((TextView)findViewById(R.id.btnGithub)).setText("About");
+            ((TextView)findViewById(R.id.btnVersion)).setText("Version");
+            ((TextView)findViewById(R.id.btnOther)).setText("Other");
+            ((TextView)findViewById(R.id.btnDevMode)).setText("Close Developer Mode");
+            ((TextView)findViewById(R.id.btnWatchdogEntry)).setText("Watchdog");
+            
+            BottomNavigationView nav = findViewById(R.id.bottomNav);
+            nav.getMenu().findItem(R.id.navHome).setTitle("Home");
+            nav.getMenu().findItem(R.id.navPlayers).setTitle("Players");
+            nav.getMenu().findItem(R.id.navPlugin).setTitle("Plugins");
+            nav.getMenu().findItem(R.id.navRcon).setTitle("RCON");
+            nav.getMenu().findItem(R.id.navSettings).setTitle("Settings");
+        } else {
+            tvTitleTps.setText("TPS");
+            tvTitleMspt.setText("MSPT");
+            tvTitlePlayers.setText("在线玩家");
+            tvTitleVersion.setText("服务器版本");
+            tvTitleUptime.setText("运行时长");
+            tvTitleMemory.setText("内存占用");
+            tvNoPlayers.setText("没有玩家");
+            etRcon.setHint("输入命令");
+            ((Button)findViewById(R.id.btnRconSend)).setText("发送");
+            ((Button)findViewById(R.id.btnPluginAdd)).setText("下载插件");
+            ((TextView)findViewById(R.id.btnGithub)).setText("关于");
+            ((TextView)findViewById(R.id.btnVersion)).setText("版本");
+            ((TextView)findViewById(R.id.btnOther)).setText("其他");
+            ((TextView)findViewById(R.id.btnDevMode)).setText("关闭开发者模式");
+            ((TextView)findViewById(R.id.btnWatchdogEntry)).setText("看门狗");
+            
+            BottomNavigationView nav = findViewById(R.id.bottomNav);
+            nav.getMenu().findItem(R.id.navHome).setTitle("主页");
+            nav.getMenu().findItem(R.id.navPlayers).setTitle("玩家");
+            nav.getMenu().findItem(R.id.navPlugin).setTitle("插件");
+            nav.getMenu().findItem(R.id.navRcon).setTitle("RCON");
+            nav.getMenu().findItem(R.id.navSettings).setTitle("设置");
+        }
 
         findViewById(R.id.btnRconSend).setOnClickListener(v -> sendRcon());
         
@@ -93,6 +157,8 @@ public class ServerActivity extends AppCompatActivity {
                         Uri.parse("https://github.com/xiaofangii2-dev/xfxzmod"))));
         findViewById(R.id.btnVersion).setOnClickListener(v ->
                 startActivity(new Intent(this, VersionActivity.class)));
+        findViewById(R.id.btnOther).setOnClickListener(v -> 
+                startActivity(new Intent(this, OtherActivity.class)));
         findViewById(R.id.btnWatchdogEntry).setOnClickListener(v ->
                 startActivity(new Intent(this, WatchdogActivity.class)));
         findViewById(R.id.btnDevMode).setOnClickListener(v -> openDevDialog());
@@ -109,10 +175,26 @@ public class ServerActivity extends AppCompatActivity {
         });
 
         refreshDevVisibility();
+        resetStats();
 
-        api = new ApiClient(ip, token);
-        api.fetchStatus(d -> { authorized = true; update(d); api.connectWebSocket(this::update, msg -> {}); },
-                msg -> Toast.makeText(this, "连接失败: " + msg, Toast.LENGTH_SHORT).show());
+        api = new ApiClient(ip, token, Prefs.getUpdateInterval(this));
+        api.fetchStatus(d -> {
+            authorized = true;
+            update(d);
+            api.startPolling(this::update, msg -> {});
+        }, msg -> {
+            resetStats();
+            api.startPolling(this::update, err -> {});
+        });
+    }
+
+    private void resetStats() {
+        tvVersion.setText("0");
+        tvPlayers.setText("0/0");
+        tvUptime.setText("00:00:00");
+        tvTps.setText("0.0");
+        tvMspt.setText("0.0");
+        tvMemory.setText("0 / 0 MB");
     }
 
     private void loadPlugins() {
@@ -124,7 +206,7 @@ public class ServerActivity extends AppCompatActivity {
                 pluginAdapter.notifyDataSetChanged();
             }
             @Override public void onError(String msg) {
-                Toast.makeText(ServerActivity.this, "获取插件失败: " + msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ServerActivity.this, "Error", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -142,7 +224,7 @@ public class ServerActivity extends AppCompatActivity {
             tvName.setText(p);
 
             btnMenu.setOnClickListener(v -> {
-                String[] options = {"踢出", "给OP", "清除OP"};
+                String[] options = isEn ? new String[]{"Kick", "Give OP", "Remove OP"} : new String[]{"踢出", "给OP", "清除OP"};
                 new AlertDialog.Builder(ServerActivity.this)
                         .setTitle(p)
                         .setItems(options, (d, which) -> {
@@ -153,10 +235,10 @@ public class ServerActivity extends AppCompatActivity {
                             
                             api.sendRcon(cmd, new ApiClient.RconCallback() {
                                 @Override public void onResult(JsonObject json) {
-                                    Toast.makeText(ServerActivity.this, "执行成功: " + options[which], Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ServerActivity.this, "Success", Toast.LENGTH_SHORT).show();
                                 }
                                 @Override public void onError(String msg) {
-                                    Toast.makeText(ServerActivity.this, "执行失败", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ServerActivity.this, "Failed", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         })
@@ -179,13 +261,13 @@ public class ServerActivity extends AppCompatActivity {
             TextView btnMenu = convertView.findViewById(R.id.btnMenu);
 
             tvName.setText(p.name);
-            tvVersion.setText("版本: " + p.version);
-            tvStatus.setText("状态: " + p.status);
+            tvVersion.setText((isEn ? "Version: " : "版本: ") + p.version);
+            tvStatus.setText((isEn ? "Status: Enabled" : "状态: 已启用"));
 
             btnMenu.setOnClickListener(v -> {
                 new AlertDialog.Builder(ServerActivity.this)
                         .setTitle(p.name)
-                        .setItems(new String[]{"卸载"}, (d, which) -> deletePlugin(p.id))
+                        .setItems(isEn ? new String[]{"Uninstall"} : new String[]{"卸载"}, (d, which) -> deletePlugin(p.id))
                         .show();
             });
             return convertView;
@@ -195,10 +277,10 @@ public class ServerActivity extends AppCompatActivity {
     private void deletePlugin(String id) {
         api.deletePlugin(id, msg -> {
             if ("OK".equals(msg)) {
-                Toast.makeText(this, "已删除，重启后生效", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, isEn ? "Success, wait for reboot" : "已删除，重启后生效", Toast.LENGTH_SHORT).show();
                 loadPlugins();
             } else {
-                Toast.makeText(this, "删除失败: " + msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -207,14 +289,30 @@ public class ServerActivity extends AppCompatActivity {
         double tps = d.get("tps").getAsDouble();
         double mspt = d.get("mspt").getAsDouble();
 
-        tvVersion.setText("版本: " + d.get("version").getAsString());
-        tvPlayers.setText("玩家: " + d.get("players").getAsInt() + "/" + d.get("maxPlayers").getAsInt());
-        tvUptime.setText("运行: " + (d.get("uptimeMs").getAsLong() / 1000) + " 秒");
-        tvTps.setText("TPS: " + tps);
-        tvMspt.setText("MSPT: " + mspt + " ms");
+        tvVersion.setText(d.get("version").getAsString());
+        tvPlayers.setText(d.get("players").getAsInt() + "/" + d.get("maxPlayers").getAsInt());
+        
+        long upSec = d.get("uptimeMs").getAsLong() / 1000;
+        long days = upSec / 86400;
+        long hours = (upSec % 86400) / 3600;
+        long mins = (upSec % 3600) / 60;
+        long secs = upSec % 60;
+        
+        String timeStr;
+        if (days > 0) {
+            timeStr = isEn ? String.format(Locale.US, "%d d %02d:%02d:%02d", days, hours, mins, secs) 
+                           : String.format(Locale.US, "%d 天 %02d:%02d:%02d", days, hours, mins, secs);
+        } else {
+            timeStr = String.format(Locale.US, "%02d:%02d:%02d", hours, mins, secs);
+        }
+        tvUptime.setText(timeStr);
+        
+        tvTps.setText(String.format("%.2f", tps));
+        tvMspt.setText(String.format("%.2f", mspt));
+        
         long used = d.get("memoryUsed").getAsLong() / 1048576;
         long max = d.get("memoryMax").getAsLong() / 1048576;
-        tvMemory.setText("内存: " + used + " / " + max + " MB");
+        tvMemory.setText(used + " / " + max + " MB");
 
         if (d.has("playerList")) {
             String names = d.get("playerList").getAsString();
@@ -240,21 +338,21 @@ public class ServerActivity extends AppCompatActivity {
             int threshold = Prefs.getTpsThreshold(this);
             if (tps < threshold && now - lastTpsNotify > 60000) {
                 lastTpsNotify = now;
-                notifyWatchdog(NOTIFY_TPS, "TPS 看门狗警告", "TPS 低于阈值: " + tps + " < " + threshold);
+                notifyWatchdog(NOTIFY_TPS, isEn ? "TPS Warning" : "TPS 看门狗警告", "TPS low: " + tps + " < " + threshold);
             }
         }
         if (Prefs.isMsptWatchdogEnabled(this)) {
             int threshold = Prefs.getMsptThreshold(this);
             if (mspt > threshold && now - lastMsptNotify > 60000) {
                 lastMsptNotify = now;
-                notifyWatchdog(NOTIFY_MSPT, "MSPT 看门狗警告", "MSPT 超过阈值: " + mspt + " > " + threshold);
+                notifyWatchdog(NOTIFY_MSPT, isEn ? "MSPT Warning" : "MSPT 看门狗警告", "MSPT high: " + mspt + " > " + threshold);
             }
         }
     }
 
     private void sendRcon() {
         if (!authorized || api == null) {
-            Toast.makeText(this, "token 未配对，无法执行", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isEn ? "No connection" : "未连接", Toast.LENGTH_SHORT).show();
             return;
         }
         String cmd = etRcon.getText().toString().trim();
@@ -263,14 +361,14 @@ public class ServerActivity extends AppCompatActivity {
             @Override public void onResult(JsonObject json) {
                 if (json.has("ok") && json.get("ok").getAsBoolean()) {
                     String out = json.has("output") ? json.get("output").getAsString() : "";
-                    tvRconResult.setText(out.isEmpty() ? "(无输出)" : out);
+                    tvRconResult.setText(out.isEmpty() ? "(No output)" : out);
                 } else {
-                    String err = json.has("error") ? json.get("error").getAsString() : "未知错误";
-                    tvRconResult.setText("执行失败: " + err);
+                    String err = json.has("error") ? json.get("error").getAsString() : "Unknown error";
+                    tvRconResult.setText("Error: " + err);
                 }
             }
             @Override public void onError(String msg) {
-                tvRconResult.setText("请求错误: " + msg);
+                tvRconResult.setText("Request error: " + msg);
             }
         });
         etRcon.setText("");
@@ -278,7 +376,7 @@ public class ServerActivity extends AppCompatActivity {
 
     private void createChannel() {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel ch = new NotificationChannel(CHANNEL_ID, "看门狗", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel ch = new NotificationChannel(CHANNEL_ID, "Watchdog", NotificationManager.IMPORTANCE_HIGH);
             NotificationManager nm = getSystemService(NotificationManager.class);
             nm.createNotificationChannel(ch);
         }
@@ -306,21 +404,48 @@ public class ServerActivity extends AppCompatActivity {
     }
 
     private void openDevDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("开发者模式")
-                .setMessage("关闭后隐藏开发者选项。")
-                .setPositiveButton("关闭", (d, w) -> {
-                    Prefs.setDevMode(this, false);
-                    refreshDevVisibility();
-                })
-                .setNegativeButton("取消", null)
-                .show();
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_alert, null);
+        TextView tvTitle = dialogView.findViewById(R.id.tvAlertTitle);
+        TextView tvMsg = dialogView.findViewById(R.id.tvAlertMsg);
+        Button btnCancel = dialogView.findViewById(R.id.btnAlertCancel);
+        Button btnOk = dialogView.findViewById(R.id.btnAlertOk);
+
+        tvTitle.setText(isEn ? "Developer Mode" : "开发者模式");
+        tvMsg.setText(isEn ? "Close to hide dev options." : "关闭后隐藏开发者选项。");
+        btnCancel.setText(isEn ? "Cancel" : "取消");
+        btnOk.setText(isEn ? "Close" : "关闭");
+
+        AlertDialog dialog = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.80), ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnOk.setOnClickListener(v -> {
+            Prefs.setDevMode(this, false);
+            refreshDevVisibility();
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        refreshDevVisibility();
+        if (isEn != LangManager.isEn(this)) {
+            recreate();
+        } else {
+            refreshDevVisibility();
+            if (authorized && api != null) {
+                api.fetchStatus(this::update, msg -> {});
+            }
+        }
     }
 
     @Override

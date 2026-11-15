@@ -1,3 +1,14 @@
+<p align="center">
+  <img src="xfxzmod/src/main/resources/icons/xfxzmod.png" alt="XFXZ Mod" width="200" style="background-color: white; border-radius: 12px; padding: 10px;"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-25-orange?style=flat-square&logo=openjdk" alt="Java 25"/>
+  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat-square&logo=go" alt="Go"/>
+  <img src="https://img.shields.io/badge/Minecraft-26.3-4CAF50?style=flat-square" alt="Minecraft 26.3"/>
+  <img src="https://img.shields.io/badge/Fabric-0.19.5+-DBD6C5?style=flat-square" alt="Fabric"/>
+</p>
+
 # XFXZ Mod
 
 一个面向 Minecraft Fabric 26.3 服务端的综合管理模组。本来只是某人想简单做个传送指令，结果越写越多，最后硬生生搓出了一个包含维度管理、AI 对话、原生控制台增强、动态插件系统以及跨平台远程控制面板的完整生态，甚至还配了个 Android 控制端。用起来大概比你直接去后台敲指令要舒服那么一点。
@@ -76,11 +87,18 @@
 
 用 Java 硬核开发的移动端控制台，让你躺在被窝里也能管服。这版 UI 经过了大幅调整，不仅适配了状态栏，交互也全面向现代 App 靠拢。
 - **OOBE 引导与本地记忆**：首次启动一步步教你授权，填好 IP 和 Token 后直接存本地私有目录。下次打开直接跳过引导页，秒进主界面。
-- **实时状态**：主页数据通过 WebSocket 实时跳动，沉浸式体验，时刻掌握服务器生死。
-- **玩家管理面板**：现在有了独立的玩家 Tab。如果你打开发现空荡荡的，说明服里没人。有人时，每个玩家右侧都有三个点，点开就能直接“踢出”、“给 OP”或“清除 OP”，再也不用去 RCON 手敲名字。
-- **插件管理面板**：可以查看已装的插件列表，如果看着不顺眼，点右侧菜单即可卸载。左上角的按钮还能直接唤起插件商店列表，挑一个点进去，服务端就会帮你下好。
-- **RCON 控制台**：内置纯净版输入框，敲入指令直接看结果，纯文本回显，干净利落。
-- **看门狗监控**：怕服务器卡成 PPT？在设置里开启后，一旦 TPS 或 MSPT 拉胯，App 立刻弹窗并往通知栏丢警告（带 60 秒防抖，不至于把你烦死）。开发者模式也换成了点版本号触发，更加优雅。
+- **实时状态**：主页数据通过 WebSocket 实时跳动，沉浸式体验，时刻掌握服务器生死。数据面板采用小方块网格设计，一目了然。
+- **玩家管理面板**：独立的玩家 Tab。如果你打开发现空荡荡的，说明服里没人。有人时，每个玩家右侧都有三个点，点开就能直接“踢出”、“给 OP”或“清除 OP”。
+- **插件管理面板**：查看已装的插件列表，右侧菜单一键卸载。左上角的按钮唤起插件商店，挑好直接装。
+- **RCON 控制台**：内置自定义圆角输入框，敲入指令直接看结果，纯文本回显，干净利落。
+- **看门狗监控**：怕服务器卡成 PPT？在设置里开启后，一旦 TPS 或 MSPT 拉胯，App 立刻弹窗并往通知栏丢警告（带 60 秒防抖，不至于把你烦死）。
+- **中英双语与自定义时间**：开发者模式隐藏在版本号里，还顺手把语言切换和刷新频率做成了二级菜单，并配有原生质感的自定义弹窗。
+
+**界面演示[中文]**  
+<img src="xfxzmod/src/main/resources/icons/a.jpg" alt="中文界面" width="300"/>
+
+**界面演示[English]**  
+<img src="xfxzmod/src/main/resources/icons/b.jpg" alt="English UI" width="300"/>
 
 ---
 
@@ -89,6 +107,7 @@
 ### 环境要求
 - JDK 25（别用低版本，不然编译报错别怪没提醒）
 - Android SDK（编译客户端需要）
+- Go 环境（编译 xfxzcli 需要）
 
 ### 编译服务端
 在项目根目录执行：
@@ -121,4 +140,4 @@ Termux 用户请注意，记得把 `android.aapt2FromMavenOverride` 指向系统
 
 ~~https://github.com/xiaofang/MyThon~~
 
-哎，不对，这好像是我的项目
+本项目作者本人的项目，无需引用。

@@ -26,6 +26,9 @@
         <activity android:name=".ServerActivity" android:exported="false" />
         <activity android:name=".VersionActivity" android:exported="false" />
         <activity android:name=".WatchdogActivity" android:exported="false" />
+        <activity android:name=".OtherActivity" android:exported="false" />
+        <activity android:name=".LanguageActivity" android:exported="false" />
+        <activity android:name=".IntervalActivity" android:exported="false" />
         <activity android:name=".StoreActivity" android:exported="false" />
         <activity android:name=".StoreDetailActivity" android:exported="false" />
         

@@ -7,24 +7,34 @@
     android:padding="24dp"
     android:background="#C8E6C9">
 
+    <!-- 去掉下划线，强制使用自定义背景 -->
     <EditText
         android:id="@+id/etIp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="服务器 IP 或地址"
-        android:layout_marginBottom="12dp"/>
+        android:hint="IP"
+        android:background="@drawable/bg_input"
+        android:textColor="#333333"
+        android:textColorHint="#888888"
+        android:singleLine="true"
+        android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/etToken"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="token"
-        android:layout_marginBottom="24dp"/>
+        android:hint="Token"
+        android:background="@drawable/bg_input"
+        android:textColor="#333333"
+        android:textColorHint="#888888"
+        android:singleLine="true"
+        android:layout_marginBottom="32dp"/>
 
     <Button
         android:id="@+id/btnConnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="连接"
+        android:textColor="#FFFFFF"
         android:backgroundTint="#66BB6A"/>
 </LinearLayout>

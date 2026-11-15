@@ -13,17 +13,58 @@
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
             android:paddingTop="32dp">
             
-            <LinearLayout android:id="@+id/pageHome" android:layout_width="match_parent"
-                android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
-                <TextView android:id="@+id/tvVersion" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-                <TextView android:id="@+id/tvPlayers" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-                <TextView android:id="@+id/tvUptime" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-                <TextView android:id="@+id/tvTps" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-                <TextView android:id="@+id/tvMspt" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-                <TextView android:id="@+id/tvMemory" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="16sp" android:padding="8dp"/>
-            </LinearLayout>
+            <!-- 主页 -->
+            <ScrollView android:id="@+id/pageHome" android:layout_width="match_parent"
+                android:layout_height="match_parent" android:padding="12dp">
+                <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:columnCount="2" android:rowCount="4">
+                    
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitleTps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TPS" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvTps" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="22sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
 
-            <!-- 玩家页面增加空状态 -->
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitleMspt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MSPT" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvMspt" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="22sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitlePlayers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="在线玩家" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvPlayers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="22sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitleVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="服务器版本" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="20sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitleUptime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="运行时长" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvUptime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="16sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_columnWeight="1"
+                        android:layout_margin="6dp" android:orientation="vertical" android:padding="16dp"
+                        android:background="@drawable/bg_card">
+                        <TextView android:id="@+id/tvTitleMemory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="内存占用" android:textSize="12sp" android:textColor="#666666"/>
+                        <TextView android:id="@+id/tvMemory" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="16sp" android:textStyle="bold" android:textColor="#2E7D32" android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+
+                </GridLayout>
+            </ScrollView>
+
+            <!-- 玩家页面 -->
             <FrameLayout android:id="@+id/pagePlayers" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
                 <ListView android:id="@+id/lvPlayers" android:layout_width="match_parent" android:layout_height="match_parent"
                     android:divider="#A5D6A7" android:dividerHeight="1dp"/>
@@ -32,41 +73,47 @@
                     android:gravity="center" android:visibility="gone"/>
             </FrameLayout>
 
+            <!-- 插件页面 -->
             <LinearLayout android:id="@+id/pagePlugin" android:layout_width="match_parent"
                 android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
                 <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="8dp">
                     <Button android:id="@+id/btnPluginAdd" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="下载插件" android:backgroundTint="#66BB6A" android:layout_alignParentStart="true"/>
+                        android:text="下载插件" android:textColor="#FFFFFF" android:backgroundTint="#66BB6A" android:layout_alignParentStart="true"/>
                 </RelativeLayout>
                 <ListView android:id="@+id/lvPlugins" android:layout_width="match_parent" android:layout_height="match_parent"
                     android:divider="#A5D6A7" android:dividerHeight="1dp"/>
             </LinearLayout>
 
+            <!-- RCON 页面 -->
             <LinearLayout android:id="@+id/pageRcon" android:layout_width="match_parent"
                 android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:visibility="gone">
                 <EditText android:id="@+id/etRcon" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:hint="输入命令"/>
+                    android:layout_height="wrap_content" android:hint="输入命令" android:background="@drawable/bg_input" android:textColor="#333333" android:textColorHint="#888888"/>
                 <Button android:id="@+id/btnRconSend" android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" android:text="发送"/>
+                    android:layout_height="wrap_content" android:text="发送" android:textColor="#FFFFFF" android:backgroundTint="#66BB6A" android:layout_marginTop="8dp"/>
                 <TextView android:id="@+id/tvRconResult" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:textSize="14sp" android:padding="8dp"/>
+                    android:layout_height="wrap_content" android:textSize="14sp" android:padding="8dp" android:textColor="#333333"/>
             </LinearLayout>
 
+            <!-- 设置页面 -->
             <ScrollView android:id="@+id/pageSettings" android:layout_width="match_parent"
                 android:layout_height="match_parent" android:visibility="gone">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:orientation="vertical" android:padding="16dp">
                     <TextView android:id="@+id/btnGithub" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="关于" android:textSize="16sp"
+                        android:layout_height="wrap_content" android:text="关于" android:textSize="16sp" android:textColor="#000000"
                         android:padding="16dp" android:background="?android:attr/selectableItemBackground"/>
                     <TextView android:id="@+id/btnVersion" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="版本" android:textSize="16sp"
+                        android:layout_height="wrap_content" android:text="版本" android:textSize="16sp" android:textColor="#000000"
+                        android:padding="16dp" android:background="?android:attr/selectableItemBackground"/>
+                    <TextView android:id="@+id/btnOther" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" android:text="其他" android:textSize="16sp" android:textColor="#000000"
                         android:padding="16dp" android:background="?android:attr/selectableItemBackground"/>
                     <TextView android:id="@+id/btnDevMode" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="关闭开发者模式" android:textSize="16sp"
+                        android:layout_height="wrap_content" android:text="关闭开发者模式" android:textSize="16sp" android:textColor="#000000"
                         android:padding="16dp" android:visibility="gone" android:background="?android:attr/selectableItemBackground"/>
                     <TextView android:id="@+id/btnWatchdogEntry" android:layout_width="match_parent"
-                        android:layout_height="wrap_content" android:text="看门狗" android:textSize="16sp"
+                        android:layout_height="wrap_content" android:text="看门狗" android:textSize="16sp" android:textColor="#000000"
                         android:padding="16dp" android:visibility="gone" android:background="?android:attr/selectableItemBackground"/>
                 </LinearLayout>
             </ScrollView>

@@ -15,6 +15,7 @@ public class Prefs {
     private static final String KEY_WATCHDOG_TPS_THRESHOLD = "watchdog_tps_threshold";
     private static final String KEY_WATCHDOG_MSPT = "watchdog_mspt_enabled";
     private static final String KEY_WATCHDOG_MSPT_THRESHOLD = "watchdog_mspt_threshold";
+    private static final String KEY_UPDATE_INTERVAL = "update_interval";
 
     private static Properties load(Context ctx) {
         Properties p = new Properties();
@@ -86,6 +87,16 @@ public class Prefs {
     public static void setMsptThreshold(Context ctx, int v) {
         Properties p = load(ctx);
         p.setProperty(KEY_WATCHDOG_MSPT_THRESHOLD, String.valueOf(v));
+        save(ctx, p);
+    }
+
+    public static int getUpdateInterval(Context ctx) {
+        try { return Integer.parseInt(load(ctx).getProperty(KEY_UPDATE_INTERVAL, "5")); }
+        catch (Exception e) { return 5; }
+    }
+    public static void setUpdateInterval(Context ctx, int v) {
+        Properties p = load(ctx);
+        p.setProperty(KEY_UPDATE_INTERVAL, String.valueOf(v));
         save(ctx, p);
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="#C8E6C9" android:padding="16dp">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp" android:layout_height="48dp"
+        android:src="@drawable/ic_back" android:background="?android:attr/selectableItemBackground"
+        android:layout_marginTop="16dp" android:layout_marginBottom="16dp"/>
+
+    <TextView android:id="@+id/btnOtherLanguage" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="16sp" android:padding="16dp" android:textColor="#000000"
+        android:background="?android:attr/selectableItemBackground"/>
+
+    <TextView android:id="@+id/btnOtherInterval" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="16sp" android:padding="16dp" android:textColor="#000000"
+        android:background="?android:attr/selectableItemBackground"/>
+</LinearLayout>
