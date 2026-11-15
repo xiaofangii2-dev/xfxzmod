@@ -112,7 +112,7 @@ GET /api/status
 
 POST /api/rcon
 
-发送命令到服务器，body 为命令原文。需要请求头 Authorization: Bearer <token>。
+发送命令到服务器，body 为命令原文。返回 JSON 包含 ok、output (命令执行输出) 或 error。需要请求头 Authorization: Bearer <token>。
 
 /ws
 
@@ -120,9 +120,11 @@ WebSocket 端点，每 5 秒推送一次和 /api/status 相同的 JSON。
 
 ### Android 客户端 xfxzapp
 
-打开后先请求通知权限和 Shizuku 权限，两者都授权后点“下一步”。然后填服务器地址和 token，验证通过后进入主页面。
+首次打开进入 OOBE 向导，请求通知权限、Shizuku 权限和文件访问权限。授权完成后进入连接页，填写服务器地址和 token。连接成功后会保存到本地 (Android/data/org.xiaofang_dev.xfxzapp/files/xfxz.properties)，下次打开自动跳过 OOBE 直接进入主页面。
 
-主页面底部三个 Tab：主页显示服务器状态卡片，RCON 页发送命令，设置页只有“关于”跳转 GitHub。RCON 页在 token 未配对时拒绝执行。
+主页面底部三个 Tab：主页显示服务器状态卡片，RCON 页发送命令并显示服务端纯文本输出，设置页包含关于、版本、开发者模式和看门狗设置。
+
+开发者模式：在设置 -> 版本中，连续点击 APP 版本 6 次开启。开启后设置页出现“看门狗”入口。看门狗支持 TPS 和 MSPT 两种监控，可分别设置开关和阈值，触发时 APP 内弹窗并在通知栏发送通知。
 
 服务器地址填 127.0.0.1:18923（本地）或服务器 IP 加端口，token 填 config/xfxz/panel.cfg 里的值。
 
