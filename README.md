@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="xfxzmod/src/main/resources/icons/xfxzmod.png" alt="XFXZ Mod" width="200" style="background-color: white; border-radius: 12px; padding: 10px;"/>
+  <img src="xfxzmod/src/main/resources/icons/icon.png" alt="XFXZ Mod" width="200" style="background-color: white; border-radius: 12px; padding: 10px;"/>
 </p>
 
 <p align="center">
